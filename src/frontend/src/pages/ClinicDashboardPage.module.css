@@ -1,0 +1,469 @@
+.appShell {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 1rem clamp(1rem, 1.8vw, 2rem) 3rem;
+}
+
+.navbar {
+  position: sticky;
+  top: 0.8rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(68, 112, 136, 0.22);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(19, 41, 54, 0.12);
+}
+
+.brandBlock {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.brandBlock strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.brandBlock p {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+
+.brandMark {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(130deg, var(--tone-4), var(--tone-5));
+  box-shadow: 0 0 0 6px rgba(112, 159, 182, 0.2);
+}
+
+.navLinks {
+  display: flex;
+  gap: 1rem;
+}
+
+.navLinks a {
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.navActions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  padding: 1.4rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.35), transparent 55%),
+    linear-gradient(135deg, var(--tone-2), var(--tone-4));
+  box-shadow: 0 18px 40px rgba(32, 51, 66, 0.16);
+  animation: riseIn 420ms ease;
+  margin-top: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--tone-5);
+}
+
+.hero h1 {
+  margin: 0.35rem 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.7rem);
+  color: var(--ink-strong);
+}
+
+.heroSubtitle {
+  margin: 0;
+  max-width: 52ch;
+  color: var(--ink-soft);
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 44px);
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.swatches span {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.68);
+}
+
+.feedback {
+  margin: 1rem 0 0;
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font-weight: 700;
+}
+
+.feedbackSuccess {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.feedbackError {
+  background: var(--color-surface-alt);
+  color: var(--ink-strong);
+}
+
+.loadingState {
+  margin-top: 1.25rem;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.statsGrid {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+
+.statCard {
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 6px 16px rgba(32, 51, 66, 0.08);
+  animation: riseIn 520ms ease both;
+}
+
+.statCard p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.statCard strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.5rem;
+  color: var(--tone-5);
+}
+
+.layoutGrid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.panel {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 12px 28px rgba(32, 51, 66, 0.11);
+  animation: riseIn 620ms ease both;
+}
+
+.panelHeading h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.panelHeading p {
+  margin: 0.2rem 0 0.85rem;
+  color: var(--ink-soft);
+}
+
+.panelActions {
+  margin-bottom: 0.75rem;
+}
+
+.modalForm,
+.filterForm {
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 0.8rem;
+  margin-bottom: 0.85rem;
+}
+
+.filterForm {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.formGrid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+}
+
+.modalForm label,
+.filterForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.33rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ink-strong);
+}
+
+.modalForm input,
+.modalForm select,
+.filterForm input,
+.filterForm select {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  padding: 0.56rem 0.62rem;
+  font: inherit;
+  color: var(--ink-strong);
+  background: var(--color-white);
+}
+
+.modalForm input:focus,
+.modalForm select:focus,
+.filterForm input:focus,
+.filterForm select:focus {
+  outline: 2px solid rgba(31, 116, 216, 0.35);
+  outline-offset: 1px;
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+
+.btn {
+  border: none;
+  border-radius: 9px;
+  padding: 0.52rem 0.76rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 170ms ease, opacity 170ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  color: var(--color-white);
+  background: linear-gradient(125deg, var(--color-primary), var(--color-primary-strong));
+}
+
+.btnGhost {
+  color: var(--ink-strong);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+
+.btnDanger {
+  color: var(--ink-strong);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 610px;
+}
+
+.tableWrap th,
+.tableWrap td {
+  padding: 0.65rem 0.62rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: center;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.tableWrap th {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  font-weight: 800;
+}
+
+.tableWrap tbody tr:hover {
+  background: rgba(31, 116, 216, 0.05);
+}
+
+.actionsCell {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.statusPill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  color: var(--ink-strong);
+  background: var(--color-surface-alt);
+}
+
+.statusScheduled {
+  background: rgba(31, 116, 216, 0.18);
+  color: var(--color-primary-strong);
+}
+
+.statusCompleted {
+  background: rgba(31, 116, 216, 0.12);
+  color: var(--ink-strong);
+}
+
+.statusCancelled {
+  background: var(--color-surface-alt);
+  color: var(--ink-strong);
+}
+
+.statusRescheduled {
+  background: rgba(31, 116, 216, 0.08);
+  color: var(--ink-soft);
+}
+
+.statusNoShow {
+  background: var(--color-surface-alt);
+  color: var(--ink-soft);
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: var(--color-overlay);
+  padding: 1rem;
+}
+
+.modalCard {
+  width: min(100%, 720px);
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  box-shadow: 0 22px 48px rgba(15, 28, 36, 0.22);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.modalClose {
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--ink-strong);
+  border-radius: 9px;
+  width: 34px;
+  height: 34px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.modalBody {
+  padding: 1rem;
+}
+
+.confirmBox p {
+  margin: 0 0 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1120px) {
+  .layoutGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .navLinks {
+    order: 3;
+    width: 100%;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .formGrid,
+  .filterForm {
+    grid-template-columns: 1fr;
+  }
+
+  .actionsCell {
+    flex-wrap: wrap;
+  }
+}
