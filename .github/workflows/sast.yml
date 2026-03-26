@@ -1,0 +1,184 @@
+name: SAST
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: javascript-typescript
+            build-mode: none
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended
+
+      - name: Set up JDK 21
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build backend for CodeQL
+        if: matrix.language == 'java-kotlin'
+        working-directory: src/backend
+        run: ./mvnw -B -DskipTests compile
+
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve git range
+        id: range
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "log_opts=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "log_opts=--all" >> "$GITHUB_OUTPUT"
+          else
+            echo "log_opts=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Gitleaks
+        id: gitleaks
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git . \
+            --config=.gitleaks.toml \
+            --log-opts="${{ steps.range.outputs.log_opts }}" \
+            --report-format sarif \
+            --report-path reports/gitleaks-pr.sarif \
+            --redact \
+            --exit-code 1
+
+      - name: Upload Gitleaks report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-pr-report
+          path: reports/gitleaks-pr.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Gitleaks gate
+        if: steps.gitleaks.outcome == 'failure'
+        run: exit 1
+
+  frontend-deps:
+    name: Frontend Dependency Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: npm_audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p ../reports
+          npm audit --omit=dev --audit-level=high --json > ../reports/frontend-audit.json
+
+      - name: Upload npm audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-audit-report
+          path: src/reports/frontend-audit.json
+          if-no-files-found: warn
+
+      - name: Enforce npm audit gate
+        if: steps.npm_audit.outcome == 'failure'
+        run: exit 1
+
+  backend-deps:
+    name: Backend Dependency Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run OWASP Dependency-Check
+        id: dependency_check
+        continue-on-error: true
+        run: |
+          ./mvnw -B -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
+
+      - name: Upload backend dependency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dependency-check-report
+          path: |
+            src/backend/target/dependency-check-report.html
+            src/backend/target/dependency-check-report.json
+            src/backend/target/dependency-check-report.xml
+          if-no-files-found: warn
+
+      - name: Enforce backend dependency gate
+        if: steps.dependency_check.outcome == 'failure'
+        run: exit 1

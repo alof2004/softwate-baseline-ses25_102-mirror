@@ -93,3 +93,55 @@ The root `.env.example` defines the values used by Docker Compose, including:
 - Vite API/proxy variables
 
 Copy it to `.env` and adjust values if needed.
+
+## SAST Tooling
+
+This repository includes static security checks at three levels:
+
+- Local `pre-commit` hooks with `Gitleaks` and `Semgrep` for fast developer feedback
+- GitHub Actions PR checks with `CodeQL`, `Gitleaks`, and dependency scanning for merge protection
+- A nightly GitHub Actions workflow with `CodeQL` and deeper security scans
+
+### Local setup
+
+Requirements:
+
+- Python 3
+- A real JDK 21 compiler for backend build-based scans
+- Node.js 20+ and npm
+
+Install and enable the local hooks:
+
+```bash
+python3 -m pip install --user pre-commit
+pre-commit install
+```
+
+If your system blocks `pip install --user` with an externally-managed Python environment, create a virtual environment or use `pipx` instead.
+
+Run the local SAST hooks against all tracked files:
+
+```bash
+pre-commit run --all-files
+```
+
+### Backend deep scan
+
+The backend security profile adds SpotBugs with FindSecBugs plus OWASP Dependency-Check.
+
+```bash
+cd src/backend
+javac -version
+# Confirm the compiler is JDK 21 before running the security profile.
+./mvnw -Psecurity-sast -DskipTests verify
+```
+
+If you only want the backend dependency audit used by the PR workflow:
+
+```bash
+cd src/backend
+javac -version
+./mvnw -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
+```
+
+See [`docs/sast-strategy.md`](docs/sast-strategy.md) for the rationale, blocking thresholds, and triage policy.
