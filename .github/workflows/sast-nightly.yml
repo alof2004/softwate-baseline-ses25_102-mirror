@@ -150,7 +150,7 @@ jobs:
       - name: Run Trivy comprehensive filesystem scan
         id: trivy_fs
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -171,7 +171,7 @@ jobs:
       - name: Run Trivy backend dependency scan
         id: trivy_backend
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.30.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: 'src/backend'
