@@ -51,44 +51,6 @@ jobs:
         with:
           category: "/language:${{ matrix.language }}"
 
-  gitleaks-full:
-    name: Gitleaks Full History
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Gitleaks full-history scan
-        id: gitleaks
-        continue-on-error: true
-        shell: bash
-        run: |
-          mkdir -p reports
-          docker run --rm \
-            -v "$PWD:/repo" \
-            -w /repo \
-            ghcr.io/gitleaks/gitleaks:v8.30.1 \
-            git . \
-            --config=.gitleaks.toml \
-            --report-format sarif \
-            --report-path reports/gitleaks-nightly.sarif \
-            --redact \
-            --exit-code 1
-
-      - name: Upload Gitleaks nightly report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gitleaks-nightly-report
-          path: reports/gitleaks-nightly.sarif
-          if-no-files-found: warn
-
-      - name: Enforce Gitleaks nightly gate
-        if: steps.gitleaks.outcome == 'failure'
-        run: exit 1
-
   frontend-deps:
     name: Frontend Dependency Audit
     runs-on: ubuntu-latest
@@ -129,6 +91,108 @@ jobs:
         if: steps.npm_audit.outcome == 'failure'
         run: exit 1
 
+  semgrep-comprehensive:
+    name: Semgrep (Comprehensive)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep==1.145.0
+
+      - name: Run comprehensive Semgrep scan
+        id: semgrep
+        continue-on-error: true
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          mkdir -p reports
+          python -m semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/java \
+            --config p/javascript \
+            --config p/security-audit \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --severity WARNING \
+            --error \
+            --disable-version-check \
+            --metrics=off \
+            --use-git-ignore \
+            --sarif \
+            --output reports/semgrep-nightly.sarif
+
+      - name: Upload Semgrep nightly report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-nightly-report
+          path: reports/semgrep-nightly.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Semgrep nightly gate
+        if: steps.semgrep.outcome == 'failure'
+        run: exit 1
+
+  trivy-comprehensive:
+    name: Trivy Comprehensive Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy comprehensive filesystem scan
+        id: trivy_fs
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-nightly.sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          scanners: 'vuln,secret,misconfig'
+          exit-code: 0
+
+      - name: Upload Trivy filesystem nightly report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-nightly-report
+          path: trivy-fs-nightly.sarif
+          if-no-files-found: warn
+
+      - name: Run Trivy backend dependency scan
+        id: trivy_backend
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          format: 'sarif'
+          output: 'trivy-backend-nightly.sarif'
+          severity: 'MEDIUM,HIGH,CRITICAL'
+          scanners: 'vuln'
+          exit-code: 1
+
+      - name: Upload Trivy backend nightly report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-nightly-report
+          path: trivy-backend-nightly.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Trivy nightly gate
+        if: steps.trivy_backend.outcome == 'failure'
+        run: exit 1
+
   backend-deep:
     name: Backend Deep Security Scan
     runs-on: ubuntu-latest
@@ -146,7 +210,7 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Run backend deep scan
+      - name: Run backend deep scan (SpotBugs + OWASP Dependency-Check)
         id: backend_scan
         continue-on-error: true
         run: |
@@ -158,10 +222,10 @@ jobs:
         with:
           name: backend-nightly-security-reports
           path: |
+            src/backend/target/spotbugsXml.xml
             src/backend/target/dependency-check-report.html
             src/backend/target/dependency-check-report.json
             src/backend/target/dependency-check-report.xml
-            src/backend/target/spotbugsXml.xml
           if-no-files-found: warn
 
       - name: Enforce backend nightly gate

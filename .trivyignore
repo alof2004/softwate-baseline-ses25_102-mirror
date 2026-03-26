@@ -1,0 +1,8 @@
+# Trivy ignore file
+# Use this file to suppress false positives or accepted risks
+# Format: CVE-ID or other vulnerability ID per line
+
+# Example:
+# CVE-2021-12345
+
+# Add specific vulnerabilities to ignore below with justification comments

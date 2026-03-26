@@ -1,59 +1,18 @@
-name: SAST
+name: SAST - PR Checks
 
 on:
   pull_request:
     branches:
-      - develop
+      - master
   push:
     branches:
-      - develop
+      - master
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 permissions:
-  actions: read
   contents: read
-  security-events: write
 
 jobs:
-  codeql:
-    name: CodeQL (${{ matrix.language }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: java-kotlin
-            build-mode: manual
-          - language: javascript-typescript
-            build-mode: none
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-          queries: security-extended
-
-      - name: Set up JDK 21
-        if: matrix.language == 'java-kotlin'
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Build backend for CodeQL
-        if: matrix.language == 'java-kotlin'
-        working-directory: src/backend
-        run: ./mvnw -B -DskipTests compile
-
-      - name: Analyze with CodeQL
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:${{ matrix.language }}"
-
   gitleaks:
     name: Gitleaks
     runs-on: ubuntu-latest
@@ -105,6 +64,80 @@ jobs:
         if: steps.gitleaks.outcome == 'failure'
         run: exit 1
 
+  semgrep:
+    name: Semgrep (Fast)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep==1.145.0
+
+      - name: Run Semgrep
+        id: semgrep
+        continue-on-error: true
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          mkdir -p reports
+          python -m semgrep scan \
+            --config p/security-audit \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --error \
+            --disable-version-check \
+            --metrics=off \
+            --use-git-ignore \
+            --sarif \
+            --output reports/semgrep-pr.sarif
+
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-pr-report
+          path: reports/semgrep-pr.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Semgrep gate
+        if: steps.semgrep.outcome == 'failure'
+        run: exit 1
+
+  eslint-security:
+    name: ESLint Security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run ESLint with security rules
+        id: eslint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Enforce ESLint gate
+        if: steps.eslint.outcome == 'failure'
+        run: exit 1
+
   frontend-deps:
     name: Frontend Dependency Audit
     runs-on: ubuntu-latest
@@ -145,15 +178,111 @@ jobs:
         if: steps.npm_audit.outcome == 'failure'
         run: exit 1
 
-  backend-deps:
-    name: Backend Dependency Audit
+  trivy:
+    name: Trivy Security Scan
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/backend
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        id: trivy_fs
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln,secret,misconfig'
+          exit-code: 1
+
+      - name: Upload Trivy filesystem report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-report
+          path: trivy-fs-results.sarif
+          if-no-files-found: warn
+
+      - name: Run Trivy backend dependency scan
+        id: trivy_backend
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+          exit-code: 1
+
+      - name: Upload Trivy backend dependency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: trivy-backend-results.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Trivy gate
+        if: steps.trivy_fs.outcome == 'failure' || steps.trivy_backend.outcome == 'failure'
+        run: exit 1
+
+  checkov:
+    name: Checkov IaC Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        id: checkov
+        continue-on-error: true
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: dockerfile,github_actions,secrets
+          output_format: sarif
+          output_file_path: reports
+          quiet: true
+          soft_fail: false
+
+      - name: Upload Checkov report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkov-report
+          path: reports/results_sarif.sarif
+          if-no-files-found: warn
+
+      - name: Enforce Checkov gate
+        if: steps.checkov.outcome == 'failure'
+        run: exit 1
+
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    services:
+      sonarqube:
+        image: sonarqube:10-community
+        ports:
+          - 9000:9000
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/api/system/status || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+          --health-start-period 120s
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones disabled for better analysis
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -162,23 +291,69 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Run OWASP Dependency-Check
-        id: dependency_check
-        continue-on-error: true
-        run: |
-          ./mvnw -B -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
-
-      - name: Upload backend dependency report
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          name: backend-dependency-check-report
-          path: |
-            src/backend/target/dependency-check-report.html
-            src/backend/target/dependency-check-report.json
-            src/backend/target/dependency-check-report.xml
-          if-no-files-found: warn
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
 
-      - name: Enforce backend dependency gate
-        if: steps.dependency_check.outcome == 'failure'
+      - name: Wait for SonarQube to be ready
+        run: |
+          echo "Waiting for SonarQube to be ready..."
+          timeout 300 bash -c 'until curl -s http://localhost:9000/api/system/status | grep -q "UP"; do sleep 5; done'
+          echo "SonarQube is ready!"
+
+      - name: Configure SonarQube project
+        run: |
+          # Wait a bit more for full initialization
+          sleep 10
+
+          # Create project using default admin credentials
+          curl -u admin:admin -X POST \
+            "http://localhost:9000/api/projects/create?project=clinic-management-app&name=Clinic+Management+Application" \
+            || echo "Project may already exist, continuing..."
+
+          # Generate token for analysis
+          TOKEN_RESPONSE=$(curl -u admin:admin -X POST \
+            "http://localhost:9000/api/user_tokens/generate?name=github-actions-${{ github.run_id }}")
+
+          # Extract token from JSON response
+          TOKEN=$(echo $TOKEN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to generate token"
+            exit 1
+          fi
+
+          echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "SONAR_HOST_URL=http://localhost:9000" >> $GITHUB_ENV
+
+      - name: Build backend for SonarQube
+        working-directory: src/backend
+        run: ./mvnw -B -DskipTests clean compile
+
+      - name: Install frontend dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      - name: Run SonarQube scan
+        id: sonarqube
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v3
+        env:
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+
+      - name: Check SonarQube Quality Gate
+        id: sonarqube_gate
+        continue-on-error: true
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+
+      - name: Enforce SonarQube gate
+        if: steps.sonarqube.outcome == 'failure' || steps.sonarqube_gate.outcome == 'failure'
         run: exit 1

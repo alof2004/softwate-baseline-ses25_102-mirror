@@ -1,0 +1,42 @@
+# Trivy configuration file
+# https://aquasecurity.github.io/trivy/latest/docs/references/configuration/config-file/
+
+# Scan settings
+scan:
+  # Skip scanning of specific directories
+  skip-dirs:
+    - "node_modules"
+    - "target"
+    - "dist"
+    - ".git"
+
+# Vulnerability settings
+vulnerability:
+  # Vulnerability types to detect
+  type:
+    - os
+    - library
+
+# Secret scanning settings
+secret:
+  # Skip specific secret types if needed
+  # skip-patterns:
+  #   - "aws-access-key-id"
+
+# Misconfiguration settings
+misconfig:
+  # Include non-failures in report
+  include-non-failures: false
+
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+
+# Report settings
+format: sarif
+output: trivy-report.sarif
+
+# Severity threshold
+severity: HIGH,CRITICAL

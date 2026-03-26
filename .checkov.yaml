@@ -1,0 +1,47 @@
+# Checkov configuration file
+# https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
+
+# Directories to scan
+directory:
+  - .
+
+# Frameworks to scan
+framework:
+  - dockerfile
+  - github_actions
+  - secrets
+
+# Skip specific checks (use with caution and document why)
+# skip-check:
+#   - CKV_DOCKER_2  # Example: HEALTHCHECK instruction missing
+
+# Suppress specific findings by resource
+# Format: check_id:file_path:resource_name
+# skip-suppressions:
+#   - CKV_DOCKER_3:./Dockerfile:*
+
+# Output settings
+output: sarif
+output-file-path: checkov-report.sarif
+
+# Fail on severity
+# compact: true
+# quiet: true
+
+# Exclude paths
+skip-path:
+  - node_modules
+  - target
+  - dist
+  - .git
+
+# Enable specific checks only (optional)
+# check:
+#   - CKV_DOCKER_*
+#   - CKV_GHA_*
+
+# Download external modules for deeper scanning
+# download-external-modules: true
+
+# Soft fail - use false to enforce blocking
+soft-fail: false

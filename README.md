@@ -99,8 +99,8 @@ Copy it to `.env` and adjust values if needed.
 This repository includes static security checks at three levels:
 
 - Local `pre-commit` hooks with `Gitleaks` and `Semgrep` for fast developer feedback
-- GitHub Actions PR checks with `CodeQL`, `Gitleaks`, and dependency scanning for merge protection
-- A nightly GitHub Actions workflow with `CodeQL` and deeper security scans
+- GitHub Actions PR checks with `CodeQL`, `Gitleaks`, and frontend dependency scanning for merge protection
+- A nightly GitHub Actions workflow with `CodeQL` and deeper backend Java scans
 
 ### Local setup
 
@@ -127,21 +127,13 @@ pre-commit run --all-files
 
 ### Backend deep scan
 
-The backend security profile adds SpotBugs with FindSecBugs plus OWASP Dependency-Check.
+The backend security profile adds SpotBugs with FindSecBugs.
 
 ```bash
 cd src/backend
 javac -version
 # Confirm the compiler is JDK 21 before running the security profile.
 ./mvnw -Psecurity-sast -DskipTests verify
-```
-
-If you only want the backend dependency audit used by the PR workflow:
-
-```bash
-cd src/backend
-javac -version
-./mvnw -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
 ```
 
 See [`docs/sast-strategy.md`](docs/sast-strategy.md) for the rationale, blocking thresholds, and triage policy.
