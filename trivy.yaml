@@ -10,10 +10,10 @@ scan:
     - "dist"
     - ".git"
 
-# Vulnerability settings
-vulnerability:
-  # Vulnerability types to detect
-  type:
+# Package settings
+pkg:
+  # Package types to detect
+  types:
     - os
     - library
 
