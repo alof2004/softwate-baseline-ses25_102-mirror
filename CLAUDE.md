@@ -128,9 +128,9 @@ Blocks on:
 
 **Note**: Pre-commit hooks are bypassable, so PR checks are the real enforcement gate.
 
-### PR/Push Workflow (CI)
+### PR Workflow (CI)
 
-Automatically runs on PRs and pushes to `develop`. Blocks on:
+Automatically runs on all PRs targeting `master` or `develop`. Blocks on:
 
 | Tool | Purpose | Blocks On |
 | --- | --- | --- |
@@ -139,10 +139,9 @@ Automatically runs on PRs and pushes to `develop`. Blocks on:
 | **SonarQube** | Code quality & security (Java + JS) | Quality gate failure |
 | **ESLint Security** | Frontend security anti-patterns | Linting errors |
 | **npm audit** | Frontend dependency CVEs | HIGH/CRITICAL (prod deps) |
-| **Trivy** | Dependencies, secrets, misconfigs | HIGH/CRITICAL |
-| **Checkov** | Dockerfile, GitHub Actions, secrets | Policy violations |
+| **Trivy** | Dependencies & misconfigs | HIGH/CRITICAL |
 
-**Note**: SonarQube runs as an ephemeral Docker service container in GitHub Actions - no external setup required!
+**Note**: SonarQube runs as an ephemeral Docker service container in GitHub Actions - no external setup required! Trivy scans for vulnerabilities and misconfigurations but delegates secret scanning to Gitleaks for better accuracy.
 
 ### Nightly Workflow (Comprehensive)
 
@@ -151,27 +150,18 @@ Runs at 2 AM daily + manual dispatch. Blocks on:
 | Tool | Purpose | Blocks On |
 | --- | --- | --- |
 | **CodeQL** | Deep semantic analysis (Java + JS) | Security findings |
-| **Semgrep** | Full rulesets (OWASP Top 10, Java, JS) | ERROR severity |
-| **Trivy** | Comprehensive dependency/IaC scan | MEDIUM+ for deps |
+| **Semgrep** | Full rulesets (OWASP Top 10, Java, JS) | ERROR/WARNING severity |
 | **SpotBugs + FindSecBugs** | Deep Java bytecode analysis | Any bug |
-| **OWASP Dependency-Check** | Java CVE database | CVSS ≥ 7 |
-| **npm audit** | Frontend dependency CVEs | HIGH/CRITICAL |
 
-**Note**: Gitleaks is intentionally excluded from nightly scans as it already runs on every PR/push.
+**Note**: Gitleaks, Trivy, and npm audit are intentionally excluded from nightly scans as they already run on every PR, providing immediate feedback without duplication.
 
 ### Local Security Commands
 
-**Backend deep scan:**
+**Backend deep scan (SpotBugs + FindSecBugs):**
 ```bash
 cd src/backend
 javac -version  # Confirm JDK 21 compiler
 ./mvnw -Psecurity-sast -DskipTests verify
-```
-
-**Backend dependency audit only:**
-```bash
-cd src/backend
-./mvnw -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
 ```
 
 **Frontend security checks:**
@@ -184,19 +174,13 @@ npm audit --omit=dev --audit-level=high
 
 **Trivy scan:**
 ```bash
-# Filesystem scan
+# Filesystem scan (dependencies & misconfigs)
 docker run --rm -v "$PWD:/repo" -w /repo \
   aquasec/trivy:latest fs --config trivy.yaml .
 
 # Backend dependency scan
 docker run --rm -v "$PWD:/repo" -w /repo \
   aquasec/trivy:latest fs --scanners vuln src/backend
-```
-
-**Checkov IaC scan:**
-```bash
-docker run --rm -v "$PWD:/repo" -w /repo \
-  bridgecrew/checkov:latest --config-file .checkov.yaml
 ```
 
 **Important**: Backend scans require a real JDK 21 compiler (not just runtime). Ensure `JAVA_HOME` and `PATH` point to JDK 21.
@@ -210,10 +194,9 @@ docker run --rm -v "$PWD:/repo" -w /repo \
 - `sonar-project.properties` - SonarQube project configuration
 - `trivy.yaml` - Trivy configuration
 - `.trivyignore` - Trivy suppression list
-- `.checkov.yaml` - Checkov policy configuration
 - `src/frontend/eslint.config.js` - ESLint with security plugin
-- `src/backend/pom.xml` - Maven `security-sast` profile
-- `.github/workflows/sast.yml` - PR/push workflow
+- `src/backend/pom.xml` - Maven `security-sast` profile (SpotBugs + FindSecBugs)
+- `.github/workflows/sast.yml` - PR workflow
 - `.github/workflows/sast-nightly.yml` - Nightly comprehensive scan
 
 ### Handling Security Findings
@@ -224,7 +207,7 @@ All findings must be triaged:
 3. **Accepted risk**: Document the decision
 
 **Suppression guidelines:**
-- Use tool-specific suppression files (`.trivyignore`, `.semgrepignore`, Checkov skip annotations)
+- Use tool-specific suppression files (`.trivyignore`, `.semgrepignore`)
 - Keep suppressions narrow (specific CVE/check + justification)
 - Never globally weaken thresholds to make pipelines green
 
@@ -264,7 +247,7 @@ Backend `application.properties` uses environment variable defaults with fallbac
 ### Branch Protection
 
 The `master` branch should be protected with rules requiring:
-- All SAST checks to pass (7 required status checks)
+- All SAST checks to pass (6 required status checks: Gitleaks, Semgrep, SonarQube, ESLint, npm audit, Trivy)
 - At least 1 PR approval
 - Conversation resolution before merging
 - No direct pushes to master
