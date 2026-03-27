@@ -222,6 +222,18 @@ jobs:
           sarif_file: trivy-fs-results.sarif
           category: trivy-filesystem
 
+      - name: Show Trivy filesystem findings
+        if: steps.trivy_fs.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln,secret,misconfig'
+          exit-code: 0
+
       - name: Run Trivy backend dependency scan
         id: trivy_backend
         continue-on-error: true
@@ -249,6 +261,18 @@ jobs:
         with:
           sarif_file: trivy-backend-results.sarif
           category: trivy-backend
+
+      - name: Show Trivy backend findings
+        if: steps.trivy_backend.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+          exit-code: 0
 
       - name: Enforce Trivy gate
         if: steps.trivy_fs.outcome == 'failure' || steps.trivy_backend.outcome == 'failure'
