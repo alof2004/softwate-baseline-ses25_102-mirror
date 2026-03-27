@@ -165,6 +165,14 @@ jobs:
           name: trivy-fs-nightly-report
           path: trivy-fs-nightly.sarif
 
+      - name: Publish Trivy filesystem nightly findings
+        if: always() && hashFiles('trivy-fs-nightly.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-fs-nightly.sarif
+          category: trivy-nightly-filesystem
+
       - name: Run Trivy backend dependency scan
         id: trivy_backend
         continue-on-error: true
@@ -184,6 +192,14 @@ jobs:
         with:
           name: trivy-backend-nightly-report
           path: trivy-backend-nightly.sarif
+
+      - name: Publish Trivy backend nightly findings
+        if: always() && hashFiles('trivy-backend-nightly.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-backend-nightly.sarif
+          category: trivy-nightly-backend
 
       - name: Enforce Trivy nightly gate
         if: steps.trivy_backend.outcome == 'failure'
