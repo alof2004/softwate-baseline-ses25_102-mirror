@@ -190,8 +190,19 @@ jobs:
           if-no-files-found: warn
 
       - name: Enforce Trivy nightly gate
-        if: steps.trivy_backend.outcome == 'failure'
-        run: exit 1
+        if: always()
+        shell: bash
+        run: |
+          if [ "${{ steps.trivy_backend.outcome }}" = "failure" ]; then
+            echo "::error title=Trivy nightly backend scan failed::Medium or higher backend dependency findings were detected. Review the trivy-backend-nightly-report artifact."
+            {
+              echo "### Trivy nightly gate failed"
+              echo ""
+              echo "- Backend dependency scan outcome: \`${{ steps.trivy_backend.outcome }}\`"
+              echo "- Review the uploaded Trivy SARIF artifact for the blocking findings."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
   backend-deep:
     name: Backend Deep Security Scan

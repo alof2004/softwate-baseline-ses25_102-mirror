@@ -230,8 +230,31 @@ jobs:
           if-no-files-found: warn
 
       - name: Enforce Trivy gate
-        if: steps.trivy_fs.outcome == 'failure' || steps.trivy_backend.outcome == 'failure'
-        run: exit 1
+        if: always()
+        shell: bash
+        run: |
+          failed=0
+
+          if [ "${{ steps.trivy_fs.outcome }}" = "failure" ]; then
+            echo "::error title=Trivy filesystem scan failed::High or critical findings were detected. Review the trivy-fs-report artifact."
+            failed=1
+          fi
+
+          if [ "${{ steps.trivy_backend.outcome }}" = "failure" ]; then
+            echo "::error title=Trivy backend dependency scan failed::High or critical findings were detected. Review the trivy-backend-report artifact."
+            failed=1
+          fi
+
+          if [ "$failed" -eq 1 ]; then
+            {
+              echo "### Trivy gate failed"
+              echo ""
+              echo "- Filesystem scan outcome: \`${{ steps.trivy_fs.outcome }}\`"
+              echo "- Backend dependency scan outcome: \`${{ steps.trivy_backend.outcome }}\`"
+              echo "- Review the uploaded Trivy SARIF artifacts for the blocking findings."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
   sonarqube:
     name: SonarQube Analysis
@@ -326,5 +349,28 @@ jobs:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
 
       - name: Enforce SonarQube gate
-        if: steps.sonarqube.outcome == 'failure' || steps.sonarqube_gate.outcome == 'failure'
-        run: exit 1
+        if: always()
+        shell: bash
+        run: |
+          failed=0
+
+          if [ "${{ steps.sonarqube.outcome }}" = "failure" ]; then
+            echo "::error title=SonarQube scan failed::Review the 'Run SonarQube scan' step log for the analysis error."
+            failed=1
+          fi
+
+          if [ "${{ steps.sonarqube_gate.outcome }}" = "failure" ]; then
+            echo "::error title=SonarQube quality gate failed::Review the 'Check SonarQube Quality Gate' step log for the blocking quality gate result."
+            failed=1
+          fi
+
+          if [ "$failed" -eq 1 ]; then
+            {
+              echo "### SonarQube gate failed"
+              echo ""
+              echo "- Scan step outcome: \`${{ steps.sonarqube.outcome }}\`"
+              echo "- Quality gate step outcome: \`${{ steps.sonarqube_gate.outcome }}\`"
+              echo "- Check the SonarQube scan and quality gate step logs above for the specific failure."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
