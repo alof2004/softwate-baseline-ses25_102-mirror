@@ -12,5 +12,9 @@ WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
+RUN groupadd --system app && useradd --system --gid app --create-home app \
+    && chown app:app /app/app.jar
+
 EXPOSE 8080
+USER app
 ENTRYPOINT ["java", "-jar", "app.jar"]
