@@ -48,26 +48,25 @@ The design principles are:
 
 No single scanner excels at all security domains. This strategy uses specialized tools:
 
-- **Gitleaks** - Fast, accurate secret detection
+- **Gitleaks** - Fast, accurate secret detection in git history
 - **Semgrep** - Fast pattern-based source code analysis with good language coverage
 - **SonarQube** - Comprehensive code quality and security analysis for Java and JavaScript
 - **CodeQL** - Deep semantic analysis (slower, more accurate)
-- **Trivy** - Modern, fast vulnerability scanner for dependencies, containers, and IaC
-- **Checkov** - Policy-as-code for infrastructure misconfigurations
+- **Trivy** - Modern, fast vulnerability scanner for dependencies and IaC misconfigurations
 - **ESLint Security** - Frontend-specific security patterns integrated into linting workflow
 - **SpotBugs + FindSecBugs** - Deep Java bytecode analysis
-- **OWASP Dependency-Check** - Authoritative CVE database for Java dependencies
 - **npm audit** - Frontend dependency vulnerabilities
 
 ### Why Not Rely On One Scanner
 
 Each tool has strengths and blind spots:
-- CodeQL provides deep analysis but takes 10-15 minutes
+- CodeQL provides deep semantic analysis but takes 10-15 minutes
 - Semgrep is fast but pattern-based (less context-aware than CodeQL)
-- Trivy is fast and covers containers/IaC but doesn't analyze source code
-- Gitleaks only finds secrets, not code vulnerabilities
+- Trivy excels at dependency scanning and IaC misconfigurations but doesn't analyze source code
+- Gitleaks specializes in secret detection but not code vulnerabilities
+- SonarQube provides comprehensive quality metrics but may miss advanced security patterns
 
-Layering tools provides better coverage and reduces false negatives.
+Layering specialized tools provides better coverage and reduces false negatives.
 
 ## Lifecycle Placement
 
@@ -82,8 +81,7 @@ Layering tools provides better coverage and reduces false negatives.
 | **SonarQube** | Code quality & security (Java + JavaScript) | Quality gate failure |
 | **ESLint Security** | Frontend security anti-patterns | Linting errors |
 | **npm audit** | Frontend dependency CVEs | HIGH/CRITICAL in production deps |
-| **Trivy** | Dependencies, secrets, misconfigs (quick scan) | HIGH/CRITICAL |
-| **Checkov** | Dockerfile, GitHub Actions, secrets | Policy violations |
+| **Trivy** | Dependencies & IaC misconfigurations | HIGH/CRITICAL |
 
 **Configuration Files:**
 - `.github/workflows/sast.yml`
@@ -91,7 +89,6 @@ Layering tools provides better coverage and reduces false negatives.
 - `sonar-project.properties`
 - `src/frontend/eslint.config.js`
 - `trivy.yaml`
-- `.checkov.yaml`
 
 ### Nightly Scans (Comprehensive - 20-40 minutes)
 
@@ -100,13 +97,10 @@ Layering tools provides better coverage and reduces false negatives.
 | Tool | Purpose | Blocking Threshold |
 | --- | --- | --- |
 | **CodeQL** | Deep semantic analysis (Java + JavaScript) | Security findings |
-| **Semgrep** | Full rulesets (OWASP Top 10, Java, JavaScript, security-audit) | ERROR severity |
-| **Trivy** | Comprehensive dependency/container/IaC scan (all severities) | MEDIUM+ for deps |
+| **Semgrep** | Full rulesets (OWASP Top 10, Java, JavaScript) | ERROR/WARNING severity |
 | **SpotBugs + FindSecBugs** | Deep Java bytecode analysis | Any bug |
-| **OWASP Dependency-Check** | Authoritative Java CVE database | CVSS ≥ 7 |
-| **npm audit** | Frontend dependency CVEs | HIGH/CRITICAL |
 
-**Note:** Gitleaks is intentionally excluded from nightly scans because it already runs on every PR/push, catching secrets immediately. With proper branch protection, a full-history scan is redundant.
+**Note:** Gitleaks, Trivy, and npm audit are intentionally excluded from nightly scans because they already run on every PR, providing immediate feedback without duplication. With proper branch protection, redundant nightly scans add no value.
 
 **Configuration Files:**
 - `.github/workflows/sast-nightly.yml`
@@ -143,11 +137,11 @@ The strategy uses strict but narrow blocking criteria to avoid alert fatigue:
 
 | Stage | What Blocks |
 | --- | --- |
-| **PR** | Gitleaks (any), Semgrep (ERROR), SonarQube (quality gate), npm audit (HIGH/CRITICAL runtime), Trivy (HIGH/CRITICAL), Checkov (policy violations), ESLint (errors) |
-| **Nightly** | CodeQL (security findings), Semgrep (ERROR), SpotBugs (any), Dependency-Check (CVSS≥7), Trivy deps (MEDIUM+), npm audit (HIGH/CRITICAL) |
+| **PR** | Gitleaks (any), Semgrep (ERROR), SonarQube (quality gate), ESLint (errors), npm audit (HIGH/CRITICAL prod deps), Trivy (HIGH/CRITICAL) |
+| **Nightly** | CodeQL (security findings), Semgrep (ERROR/WARNING), SpotBugs (any) |
 | **Pre-commit** | Gitleaks (any), Semgrep (ERROR) |
 
-Lower-severity findings appear in reports but don't block builds.
+Lower-severity findings appear in reports but don't block builds. Redundant scans are eliminated to reduce noise and focus on high-signal findings.
 
 ## Repository Layout
 
@@ -160,13 +154,12 @@ Lower-severity findings appear in reports but don't block builds.
 - `sonar-project.properties` - SonarQube project configuration
 - `trivy.yaml` - Trivy configuration
 - `.trivyignore` - Trivy suppression list
-- `.checkov.yaml` - Checkov policy configuration
 - `src/frontend/eslint.config.js` - ESLint with security plugin
-- `src/backend/pom.xml` - Maven `security-sast` profile
+- `src/backend/pom.xml` - Maven `security-sast` profile (SpotBugs + FindSecBugs)
 
 ### Workflow Files
 
-- `.github/workflows/sast.yml` - PR/push checks
+- `.github/workflows/sast.yml` - PR checks
 - `.github/workflows/sast-nightly.yml` - Nightly comprehensive scan
 
 ## Triage Policy
@@ -179,7 +172,7 @@ Every finding must be classified:
 
 ### Suppression Guidelines
 
-- Use tool-specific suppression mechanisms (`.trivyignore`, `.semgrepignore`, Checkov skip annotations)
+- Use tool-specific suppression mechanisms (`.trivyignore`, `.semgrepignore`)
 - Keep suppressions narrow (specific CVE/check + justification comment)
 - Never globally weaken thresholds to make pipelines green
 - Document all suppressions with business/technical justification
@@ -225,17 +218,12 @@ If blocked by externally-managed Python environment, use a virtual environment o
 pre-commit run --all-files
 ```
 
-### Backend Deep Scan
+### Backend Deep Scan (SpotBugs + FindSecBugs)
 
 ```bash
 cd src/backend
 javac -version  # Confirm JDK 21 compiler
 ./mvnw -Psecurity-sast -DskipTests verify
-```
-
-**Skip SpotBugs (dependency audit only):**
-```bash
-./mvnw -Psecurity-sast -DskipTests -Dsecurity.sast.skipSpotbugs=true verify
 ```
 
 ### Frontend Security Checks
@@ -250,25 +238,13 @@ npm audit --omit=dev --audit-level=high
 ### Run Trivy Locally
 
 ```bash
-# Filesystem scan
+# Filesystem scan (dependencies & misconfigurations)
 docker run --rm -v "$PWD:/repo" -w /repo \
   aquasec/trivy:latest fs --config trivy.yaml .
 
-# Dependency scan
+# Backend dependency scan only
 docker run --rm -v "$PWD:/repo" -w /repo \
   aquasec/trivy:latest fs --scanners vuln src/backend
-```
-
-### Run Checkov Locally
-
-```bash
-# Via Docker
-docker run --rm -v "$PWD:/repo" -w /repo \
-  bridgecrew/checkov:latest --config-file .checkov.yaml
-
-# Or via pip
-pip install checkov
-checkov --config-file .checkov.yaml
 ```
 
 ## Performance Targets
@@ -314,14 +290,13 @@ To enforce SAST checks, configure branch protection rules on the `master` branch
 - PRs are created FROM `develop` TO `master`
 - SAST checks run on all PRs targeting `master`
 
-**Required Status Checks** (7 checks must pass):
+**Required Status Checks** (6 checks must pass):
 1. Gitleaks
 2. Semgrep (Fast)
 3. SonarQube Analysis
 4. ESLint Security
-5. Frontend Dependency Audit
+5. Frontend Dependency Audit (npm audit)
 6. Trivy Security Scan
-7. Checkov IaC Scan
 
 **Additional Protections**:
 - Require PR approval before merging
@@ -389,6 +364,6 @@ The guide covers:
 - [Semgrep Rules Registry](https://semgrep.dev/r)
 - [CodeQL Query Documentation](https://codeql.github.com/docs/)
 - [Trivy Documentation](https://aquasecurity.github.io/trivy/)
-- [Checkov Policies](https://www.checkov.io/5.Policy%20Index/all.html)
-- [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)
+- [Gitleaks Documentation](https://github.com/gitleaks/gitleaks)
 - [FindSecBugs Rules](https://find-sec-bugs.github.io/bugs.htm)
+- [ESLint Security Plugin](https://github.com/eslint-community/eslint-plugin-security)
