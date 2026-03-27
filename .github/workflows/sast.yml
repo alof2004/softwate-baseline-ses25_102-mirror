@@ -89,7 +89,7 @@ jobs:
           SEMGREP_SEND_METRICS: "off"
         run: |
           mkdir -p reports
-          python -m semgrep scan \
+          semgrep scan \
             --config p/security-audit \
             --config .semgrep.yml \
             --severity ERROR \
@@ -106,6 +106,14 @@ jobs:
         with:
           name: semgrep-pr-report
           path: reports/semgrep-pr.sarif
+
+      - name: Publish Semgrep findings
+        if: always() && hashFiles('reports/semgrep-pr.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/semgrep-pr.sarif
+          category: semgrep-fast
 
       - name: Enforce Semgrep gate
         if: steps.semgrep.outcome == 'failure'

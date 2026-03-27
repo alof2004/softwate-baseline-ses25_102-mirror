@@ -112,7 +112,7 @@ jobs:
           SEMGREP_SEND_METRICS: "off"
         run: |
           mkdir -p reports
-          python -m semgrep scan \
+          semgrep scan \
             --config p/owasp-top-ten \
             --config p/java \
             --config p/javascript \
@@ -133,6 +133,14 @@ jobs:
         with:
           name: semgrep-nightly-report
           path: reports/semgrep-nightly.sarif
+
+      - name: Publish Semgrep nightly findings
+        if: always() && hashFiles('reports/semgrep-nightly.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/semgrep-nightly.sarif
+          category: semgrep-nightly
 
       - name: Enforce Semgrep nightly gate
         if: steps.semgrep.outcome == 'failure'
