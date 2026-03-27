@@ -332,7 +332,7 @@ jobs:
 
       - name: Build backend for SonarQube
         working-directory: src/backend
-        run: ./mvnw -B -DskipTests clean compile
+        run: ./mvnw -B -DskipTests clean compile dependency:copy-dependencies -DincludeScope=compile -DoutputDirectory=target/dependency
 
       - name: Install frontend dependencies
         working-directory: src/frontend
