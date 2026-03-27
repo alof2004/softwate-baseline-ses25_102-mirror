@@ -80,12 +80,11 @@ jobs:
           npm audit --omit=dev --audit-level=high --json > ../reports/frontend-audit-nightly.json
 
       - name: Upload npm audit nightly report
-        if: always()
+        if: always() && hashFiles('src/reports/frontend-audit-nightly.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: frontend-audit-nightly-report
           path: src/reports/frontend-audit-nightly.json
-          if-no-files-found: warn
 
       - name: Enforce npm audit nightly gate
         if: steps.npm_audit.outcome == 'failure'
@@ -129,12 +128,11 @@ jobs:
             --output reports/semgrep-nightly.sarif
 
       - name: Upload Semgrep nightly report
-        if: always()
+        if: always() && hashFiles('reports/semgrep-nightly.sarif') != ''
         uses: actions/upload-artifact@v4
         with:
           name: semgrep-nightly-report
           path: reports/semgrep-nightly.sarif
-          if-no-files-found: warn
 
       - name: Enforce Semgrep nightly gate
         if: steps.semgrep.outcome == 'failure'
@@ -161,12 +159,11 @@ jobs:
           exit-code: 0
 
       - name: Upload Trivy filesystem nightly report
-        if: always()
+        if: always() && hashFiles('trivy-fs-nightly.sarif') != ''
         uses: actions/upload-artifact@v4
         with:
           name: trivy-fs-nightly-report
           path: trivy-fs-nightly.sarif
-          if-no-files-found: warn
 
       - name: Run Trivy backend dependency scan
         id: trivy_backend
@@ -182,27 +179,23 @@ jobs:
           exit-code: 1
 
       - name: Upload Trivy backend nightly report
-        if: always()
+        if: always() && hashFiles('trivy-backend-nightly.sarif') != ''
         uses: actions/upload-artifact@v4
         with:
           name: trivy-backend-nightly-report
           path: trivy-backend-nightly.sarif
-          if-no-files-found: warn
 
       - name: Enforce Trivy nightly gate
-        if: always()
+        if: steps.trivy_backend.outcome == 'failure'
         shell: bash
         run: |
-          if [ "${{ steps.trivy_backend.outcome }}" = "failure" ]; then
-            echo "::error title=Trivy nightly backend scan failed::Medium or higher backend dependency findings were detected. Review the trivy-backend-nightly-report artifact."
-            {
-              echo "### Trivy nightly gate failed"
-              echo ""
-              echo "- Backend dependency scan outcome: \`${{ steps.trivy_backend.outcome }}\`"
-              echo "- Review the uploaded Trivy SARIF artifact for the blocking findings."
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
+          {
+            echo "### Trivy nightly gate failed"
+            echo ""
+            echo "- Backend dependency scan outcome: \`${{ steps.trivy_backend.outcome }}\`"
+            echo "- Review the Trivy scan step log and uploaded SARIF artifact for the blocking findings."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
 
   backend-deep:
     name: Backend Deep Security Scan
