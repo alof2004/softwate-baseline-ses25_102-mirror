@@ -1,11 +1,11 @@
 name: SAST - PR Checks
 
+# Test change to verify enhanced SonarQube reporting
 on:
   pull_request:
     branches:
       - master
-      - develop  # Temporary: for bootstrapping workflows
-  workflow_dispatch:  # Allows manual trigger from GitHub UI
+  workflow_dispatch:  
 
 permissions:
   actions: read
@@ -421,44 +421,127 @@ jobs:
 
           comment_file="$RUNNER_TEMP/sonarqube-pr-comment.md"
           marker="<!-- sonarqube-pr-comment -->"
-          response_file="$RUNNER_TEMP/sonarqube-quality-gate.json"
+          qg_file="$RUNNER_TEMP/sonarqube-quality-gate.json"
+          metrics_file="$RUNNER_TEMP/sonarqube-metrics.json"
 
           quality_status="UNKNOWN"
+
+          # Fetch quality gate status
           if [ "$SONAR_SCAN_OUTCOME" = "success" ]; then
             curl -sf -u "${SONAR_TOKEN}:" \
               "${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=clinic-management-app" \
-              > "$response_file" || true
+              > "$qg_file" || true
 
-            if [ -s "$response_file" ]; then
-              quality_status=$(jq -r '.projectStatus.status // "UNKNOWN"' "$response_file")
+            if [ -s "$qg_file" ]; then
+              quality_status=$(jq -r '.projectStatus.status // "UNKNOWN"' "$qg_file")
             fi
+
+            # Fetch detailed metrics
+            curl -sf -u "${SONAR_TOKEN}:" \
+              "${SONAR_HOST_URL}/api/measures/component?component=clinic-management-app&metricKeys=bugs,vulnerabilities,code_smells,security_hotspots,coverage,duplicated_lines_density,ncloc,new_bugs,new_vulnerabilities,new_code_smells,new_security_hotspots,new_coverage,new_duplicated_lines_density,new_lines" \
+              > "$metrics_file" || true
           fi
 
+          # Build the comment
           {
             echo "$marker"
-            echo "## SonarQube Report"
-            echo ""
-            echo "| Check | Result |"
-            echo "| --- | --- |"
-            echo "| Scan | \`$SONAR_SCAN_OUTCOME\` |"
-            echo "| Quality gate step | \`$SONAR_GATE_OUTCOME\` |"
-            echo "| Quality gate status | \`$quality_status\` |"
+            echo "## 🔍 SonarQube Analysis Report"
             echo ""
 
-            if [ -s "$response_file" ]; then
-              jq -r '
-                .projectStatus.conditions // []
-                | map(select(.status != "OK"))
-                | if length == 0 then
-                    "No failing conditions were returned by the SonarQube API."
-                  else
-                    "### Failing Conditions\n\n| Metric | Actual | Threshold | Status |\n| --- | --- | --- | --- |\n"
-                    + (map("| `\(.metricKey // \"unknown\")` | `\(.actualValue // \"-\")` | `\(.errorThreshold // \"-\")` | `\(.status // \"UNKNOWN\")` |") | join("\n"))
-                  end
-              ' "$response_file"
+            # Status indicator
+            if [ "$quality_status" = "OK" ]; then
+              echo "### ✅ Quality Gate: **PASSED**"
+            elif [ "$quality_status" = "ERROR" ]; then
+              echo "### ❌ Quality Gate: **FAILED**"
             else
-              echo "SonarQube API details were unavailable. Check the workflow logs for scan startup errors."
+              echo "### ⚠️ Quality Gate: **$quality_status**"
             fi
+            echo ""
+
+            # Scan status
+            echo "| Check | Status |"
+            echo "| --- | --- |"
+            echo "| Scan execution | \`$SONAR_SCAN_OUTCOME\` |"
+            echo "| Quality gate check | \`$SONAR_GATE_OUTCOME\` |"
+            echo ""
+
+            # Metrics section
+            if [ -s "$metrics_file" ]; then
+              echo "### 📊 Code Metrics"
+              echo ""
+              echo "#### New Code (This PR)"
+              echo "| Metric | Value |"
+              echo "| --- | --- |"
+
+              new_bugs=$(jq -r '.component.measures[] | select(.metric=="new_bugs") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              new_vulnerabilities=$(jq -r '.component.measures[] | select(.metric=="new_vulnerabilities") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              new_code_smells=$(jq -r '.component.measures[] | select(.metric=="new_code_smells") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              new_hotspots=$(jq -r '.component.measures[] | select(.metric=="new_security_hotspots") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              new_coverage=$(jq -r '.component.measures[] | select(.metric=="new_coverage") | .period.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              new_duplications=$(jq -r '.component.measures[] | select(.metric=="new_duplicated_lines_density") | .period.value // "0.0"' "$metrics_file" 2>/dev/null || echo "0.0")
+              new_lines=$(jq -r '.component.measures[] | select(.metric=="new_lines") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+
+              echo "| 🐛 Bugs | **$new_bugs** |"
+              echo "| 🔒 Vulnerabilities | **$new_vulnerabilities** |"
+              echo "| 💡 Code Smells | **$new_code_smells** |"
+              echo "| 🔥 Security Hotspots | **$new_hotspots** |"
+              echo "| ✅ Coverage | **$new_coverage%** |"
+              echo "| 📋 Duplications | **$new_duplications%** |"
+              echo "| 📏 Lines of Code | **$new_lines** |"
+              echo ""
+
+              echo "#### Overall Project"
+              echo "| Metric | Value |"
+              echo "| --- | --- |"
+
+              total_bugs=$(jq -r '.component.measures[] | select(.metric=="bugs") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              total_vulnerabilities=$(jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              total_code_smells=$(jq -r '.component.measures[] | select(.metric=="code_smells") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              total_hotspots=$(jq -r '.component.measures[] | select(.metric=="security_hotspots") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              total_coverage=$(jq -r '.component.measures[] | select(.metric=="coverage") | .value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
+              total_duplications=$(jq -r '.component.measures[] | select(.metric=="duplicated_lines_density") | .value // "0.0"' "$metrics_file" 2>/dev/null || echo "0.0")
+              total_ncloc=$(jq -r '.component.measures[] | select(.metric=="ncloc") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+
+              echo "| 🐛 Bugs | $total_bugs |"
+              echo "| 🔒 Vulnerabilities | $total_vulnerabilities |"
+              echo "| 💡 Code Smells | $total_code_smells |"
+              echo "| 🔥 Security Hotspots | $total_hotspots |"
+              echo "| ✅ Coverage | $total_coverage% |"
+              echo "| 📋 Duplications | $total_duplications% |"
+              echo "| 📏 Lines of Code | $total_ncloc |"
+              echo ""
+            fi
+
+            # Quality gate conditions
+            if [ -s "$qg_file" ]; then
+              echo "### 📋 Quality Gate Conditions"
+              echo ""
+
+              # Show all conditions
+              conditions_output=$(jq -r '
+                .projectStatus.conditions // []
+                | if length == 0 then
+                    "_No conditions configured_"
+                  else
+                    "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
+                    + (map(
+                      if .status == "OK" then
+                        "| ✅ \(.metricKey // "unknown") | **PASSED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                      else
+                        "| ❌ \(.metricKey // "unknown") | **FAILED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                      end
+                    ) | join("\n"))
+                  end
+              ' "$qg_file")
+
+              echo "$conditions_output"
+              echo ""
+            fi
+
+            # Dashboard link
+            echo "---"
+            echo "📊 [View full analysis on SonarQube Dashboard](${SONAR_HOST_URL}/dashboard?id=clinic-management-app)"
+
           } > "$comment_file"
 
       - name: Comment SonarQube report on PR
