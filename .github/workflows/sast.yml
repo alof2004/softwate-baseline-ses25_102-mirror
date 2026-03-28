@@ -387,7 +387,7 @@ jobs:
       - name: Run SonarQube scan
         id: sonarqube
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@v4.0.0
+        uses: SonarSource/sonarqube-scan-action@v3.0.0
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
