@@ -348,13 +348,22 @@ jobs:
       - name: Wait for SonarQube to be ready
         run: |
           echo "Waiting for SonarQube to be ready..."
-          timeout 300 bash -c 'until curl -s http://localhost:9000/api/system/status | grep -q "UP"; do sleep 5; done'
-          echo "SonarQube is ready!"
+          sleep 30
+          for i in {1..60}; do
+            if curl -sf http://localhost:9000/api/system/status | grep -q "UP"; then
+              echo "SonarQube is UP after $((i*5)) seconds!"
+              break
+            fi
+            echo "Attempt $i: SonarQube not ready yet, waiting..."
+            sleep 5
+          done
+          curl -s http://localhost:9000/api/system/status || echo "Final check failed"
+          echo "SonarQube initialization complete!"
 
       - name: Configure SonarQube project
         run: |
           # Wait a bit more for full initialization
-          sleep 10
+          sleep 20
 
           # Create project using default admin credentials
           curl -u admin:admin -X POST \
@@ -588,16 +597,15 @@ jobs:
               });
             }
 
-      # SonarQube gate enforcement disabled - check is informational only
-      # - name: Enforce SonarQube gate
-      #   if: steps.sonarqube.outcome == 'failure' || steps.sonarqube_gate.outcome == 'failure'
-      #   shell: bash
-      #   run: |
-      #     {
-      #       echo "### SonarQube gate failed"
-      #       echo ""
-      #       echo "- Scan step outcome: \`${{ steps.sonarqube.outcome }}\`"
-      #       echo "- Quality gate step outcome: \`${{ steps.sonarqube_gate.outcome }}\`"
-      #       echo "- Check the SonarQube scan and quality gate step logs for the specific failure."
-      #     } >> "$GITHUB_STEP_SUMMARY"
-      #     exit 1
+      - name: Enforce SonarQube gate
+        if: steps.sonarqube.outcome == 'failure' || steps.sonarqube_gate.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo "### SonarQube gate failed"
+            echo ""
+            echo "- Scan step outcome: \`${{ steps.sonarqube.outcome }}\`"
+            echo "- Quality gate step outcome: \`${{ steps.sonarqube_gate.outcome }}\`"
+            echo "- Check the SonarQube scan and quality gate step logs for the specific failure."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
