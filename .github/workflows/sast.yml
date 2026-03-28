@@ -557,6 +557,7 @@ jobs:
             fi
           } > "$comment_file"
 
+
       - name: Comment SonarQube report on PR
         if: github.event_name == 'pull_request' && always()
         continue-on-error: true
