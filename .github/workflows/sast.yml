@@ -396,7 +396,7 @@ jobs:
       - name: Run SonarQube scan
         id: sonarqube
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@v3.0.0
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -404,7 +404,7 @@ jobs:
       - name: Check SonarQube Quality Gate
         id: sonarqube_gate
         continue-on-error: true
-        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
