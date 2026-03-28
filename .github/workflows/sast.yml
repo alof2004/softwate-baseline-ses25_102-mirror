@@ -162,8 +162,6 @@ jobs:
         uses: actions/setup-node@v4.1.0
         with:
           node-version: "20"
-          cache: npm
-          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install frontend dependencies
         run: npm ci
@@ -191,8 +189,6 @@ jobs:
         uses: actions/setup-node@v4.1.0
         with:
           node-version: "20"
-          cache: npm
-          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install frontend dependencies
         run: npm ci
@@ -343,14 +339,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-          cache: maven
 
       - name: Set up Node.js
         uses: actions/setup-node@v4.1.0
         with:
           node-version: "20"
-          cache: npm
-          cache-dependency-path: src/frontend/package-lock.json
 
       - name: Wait for SonarQube to be ready
         run: |
