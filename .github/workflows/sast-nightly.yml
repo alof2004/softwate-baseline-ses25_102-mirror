@@ -1,0 +1,143 @@
+name: SAST Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: javascript-typescript
+            build-mode: none
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-extended,security-and-quality
+
+      - name: Set up JDK 21
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build backend for CodeQL
+        if: matrix.language == 'java-kotlin'
+        working-directory: src/backend
+        run: ./mvnw -B -DskipTests compile
+
+      - name: Analyze with CodeQL
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  semgrep-comprehensive:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep==1.145.0
+
+      - name: Run comprehensive Semgrep scan
+        id: semgrep
+        continue-on-error: true
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          mkdir -p reports
+          semgrep scan \
+            --config p/owasp-top-ten \
+            --config p/java \
+            --config p/javascript \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --severity WARNING \
+            --error \
+            --disable-version-check \
+            --metrics=off \
+            --use-git-ignore \
+            --sarif \
+            --output reports/semgrep-nightly.sarif
+
+      - name: Upload Semgrep nightly report
+        if: always() && hashFiles('reports/semgrep-nightly.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-nightly-report
+          path: reports/semgrep-nightly.sarif
+
+      - name: Publish Semgrep nightly findings
+        if: always() && hashFiles('reports/semgrep-nightly.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/semgrep-nightly.sarif
+          category: semgrep-nightly
+
+      - name: Enforce Semgrep nightly gate
+        if: steps.semgrep.outcome == 'failure'
+        run: exit 1
+
+  backend-deep:
+    name: Backend Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run backend deep scan (SpotBugs + FindSecBugs)
+        id: backend_scan
+        continue-on-error: true
+        run: |
+          ./mvnw -B -Psecurity-sast -DskipTests verify
+
+      - name: Upload backend nightly reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-nightly-security-reports
+          path: |
+            src/backend/target/spotbugsXml.xml
+          if-no-files-found: warn
+
+      - name: Enforce backend nightly gate
+        if: steps.backend_scan.outcome == 'failure'
+        run: exit 1

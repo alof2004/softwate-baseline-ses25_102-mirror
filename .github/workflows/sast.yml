@@ -1,0 +1,609 @@
+name: SAST - PR Checks
+
+# Test change to verify enhanced SonarQube reporting
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:  
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: write
+  security-events: write
+
+jobs:
+  gitleaks:
+    name: Gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve git range
+        id: range
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "log_opts=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            echo "log_opts=--all" >> "$GITHUB_OUTPUT"
+          else
+            echo "log_opts=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Gitleaks
+        id: gitleaks
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git . \
+            --config=.gitleaks.toml \
+            --log-opts="${{ steps.range.outputs.log_opts }}" \
+            --report-format sarif \
+            --report-path reports/gitleaks-pr.sarif \
+            --redact \
+            --exit-code 1
+
+      - name: Upload Gitleaks report
+        if: always() && hashFiles('reports/gitleaks-pr.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-pr-report
+          path: reports/gitleaks-pr.sarif
+
+      - name: Publish Gitleaks findings
+        if: always() && hashFiles('reports/gitleaks-pr.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/gitleaks-pr.sarif
+          category: gitleaks-pr
+
+      - name: Show Gitleaks findings
+        if: steps.gitleaks.outcome == 'failure'
+        shell: bash
+        run: |
+          mkdir -p reports
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git . \
+            --config=.gitleaks.toml \
+            --log-opts="${{ steps.range.outputs.log_opts }}" \
+            --report-format json \
+            --report-path reports/gitleaks-pr.json \
+            --redact \
+            --exit-code 0
+
+          echo "Gitleaks findings:"
+          jq -r '
+            .[]
+            | "- rule=\(.RuleID // "unknown"), file=\(.File // "unknown"), line=\(.StartLine // 0), commit=\(.Commit // "unknown")"
+          ' reports/gitleaks-pr.json
+
+      - name: Enforce Gitleaks gate
+        if: steps.gitleaks.outcome == 'failure'
+        run: exit 1
+
+  semgrep:
+    name: Semgrep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Semgrep
+        run: python -m pip install --upgrade pip semgrep==1.145.0
+
+      - name: Run Semgrep
+        id: semgrep
+        continue-on-error: true
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          mkdir -p reports
+          semgrep scan \
+            --config p/security-audit \
+            --config .semgrep.yml \
+            --severity ERROR \
+            --error \
+            --disable-version-check \
+            --metrics=off \
+            --use-git-ignore \
+            --sarif \
+            --output reports/semgrep-pr.sarif
+
+      - name: Upload Semgrep report
+        if: always() && hashFiles('reports/semgrep-pr.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-pr-report
+          path: reports/semgrep-pr.sarif
+
+      - name: Publish Semgrep findings
+        if: always() && hashFiles('reports/semgrep-pr.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: reports/semgrep-pr.sarif
+          category: semgrep-fast
+
+      - name: Enforce Semgrep gate
+        if: steps.semgrep.outcome == 'failure'
+        run: exit 1
+
+  eslint-security:
+    name: ESLint Security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run ESLint with security rules
+        id: eslint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Enforce ESLint gate
+        if: steps.eslint.outcome == 'failure'
+        run: exit 1
+
+  frontend-deps:
+    name: Frontend Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: npm_audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          mkdir -p ../reports
+          npm audit --omit=dev --audit-level=high --json > ../reports/frontend-audit.json
+
+      - name: Upload npm audit report
+        if: always() && hashFiles('src/reports/frontend-audit.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-audit-report
+          path: src/reports/frontend-audit.json
+
+      - name: Enforce npm audit gate
+        if: steps.npm_audit.outcome == 'failure'
+        run: exit 1
+
+  trivy:
+    name: Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        id: trivy_fs
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln,misconfig'
+          exit-code: 1
+
+      - name: Upload Trivy filesystem report
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-report
+          path: trivy-fs-results.sarif
+
+      - name: Publish Trivy filesystem findings
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-fs-results.sarif
+          category: trivy-filesystem
+
+      - name: Show Trivy filesystem findings
+        if: steps.trivy_fs.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln,misconfig'
+          exit-code: 0
+
+      - name: Run Trivy backend dependency scan
+        id: trivy_backend
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          format: 'sarif'
+          output: 'trivy-backend-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+          exit-code: 1
+
+      - name: Upload Trivy backend dependency report
+        if: always() && hashFiles('trivy-backend-results.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: trivy-backend-results.sarif
+
+      - name: Publish Trivy backend findings
+        if: always() && hashFiles('trivy-backend-results.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-backend-results.sarif
+          category: trivy-backend
+
+      - name: Show Trivy backend findings
+        if: steps.trivy_backend.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+          exit-code: 0
+
+      - name: Enforce Trivy gate
+        if: steps.trivy_fs.outcome == 'failure' || steps.trivy_backend.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo "### Trivy gate failed"
+            echo ""
+            echo "- Filesystem scan outcome: \`${{ steps.trivy_fs.outcome }}\`"
+            echo "- Backend dependency scan outcome: \`${{ steps.trivy_backend.outcome }}\`"
+            echo "- Review the Trivy scan step logs and uploaded SARIF artifacts for the blocking findings."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+  sonarqube:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    services:
+      sonarqube:
+        image: sonarqube:10-community
+        ports:
+          - 9000:9000
+        env:
+          SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/api/system/status || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 5
+          --health-start-period 120s
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones disabled for better analysis
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+
+      - name: Wait for SonarQube to be ready
+        run: |
+          echo "Waiting for SonarQube to be ready..."
+          timeout 300 bash -c 'until curl -s http://localhost:9000/api/system/status | grep -q "UP"; do sleep 5; done'
+          echo "SonarQube is ready!"
+
+      - name: Configure SonarQube project
+        run: |
+          # Wait a bit more for full initialization
+          sleep 10
+
+          # Create project using default admin credentials
+          curl -u admin:admin -X POST \
+            "http://localhost:9000/api/projects/create?project=clinic-management-app&name=Clinic+Management+Application" \
+            || echo "Project may already exist, continuing..."
+
+          # Generate token for analysis
+          TOKEN_RESPONSE=$(curl -u admin:admin -X POST \
+            "http://localhost:9000/api/user_tokens/generate?name=github-actions-${{ github.run_id }}")
+
+          # Extract token from JSON response
+          TOKEN=$(echo $TOKEN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+          if [ -z "$TOKEN" ]; then
+            echo "Failed to generate token"
+            exit 1
+          fi
+
+          echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
+          echo "SONAR_HOST_URL=http://localhost:9000" >> $GITHUB_ENV
+
+      - name: Build backend for SonarQube
+        working-directory: src/backend
+        run: ./mvnw -B -DskipTests clean compile dependency:copy-dependencies -DincludeScope=compile -DoutputDirectory=target/dependency
+
+      - name: Install frontend dependencies
+        working-directory: src/frontend
+        run: npm ci
+
+      - name: Run SonarQube scan
+        id: sonarqube
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
+        env:
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+
+      - name: Check SonarQube Quality Gate
+        id: sonarqube_gate
+        continue-on-error: true
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+
+      - name: Build SonarQube PR comment
+        if: github.event_name == 'pull_request' && always()
+        env:
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_SCAN_OUTCOME: ${{ steps.sonarqube.outcome }}
+          SONAR_GATE_OUTCOME: ${{ steps.sonarqube_gate.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          comment_file="$RUNNER_TEMP/sonarqube-pr-comment.md"
+          marker="<!-- sonarqube-pr-comment -->"
+          qg_file="$RUNNER_TEMP/sonarqube-quality-gate.json"
+          metrics_file="$RUNNER_TEMP/sonarqube-metrics.json"
+
+          metric_value() {
+            local metric="$1"
+            local default_value="$2"
+            jq -r --arg metric "$metric" --arg default_value "$default_value" '
+              first(.component.measures[]? | select(.metric == $metric) | (.period.value // .value))
+              // $default_value
+            ' "$metrics_file" 2>/dev/null || echo "$default_value"
+          }
+
+          format_percent() {
+            local value="$1"
+            if [ "$value" = "N/A" ]; then
+              echo "N/A"
+            else
+              echo "${value}%"
+            fi
+          }
+
+          quality_status="UNKNOWN"
+
+          # Fetch quality gate status
+          if [ "$SONAR_SCAN_OUTCOME" = "success" ]; then
+            curl -sf -u "${SONAR_TOKEN}:" \
+              "${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=clinic-management-app" \
+              > "$qg_file" || true
+
+            if [ -s "$qg_file" ]; then
+              quality_status=$(jq -r '.projectStatus.status // "UNKNOWN"' "$qg_file")
+            fi
+
+            # Fetch detailed metrics
+            curl -sf -u "${SONAR_TOKEN}:" \
+              "${SONAR_HOST_URL}/api/measures/component?component=clinic-management-app&metricKeys=bugs,vulnerabilities,code_smells,security_hotspots,coverage,duplicated_lines_density,ncloc,new_bugs,new_vulnerabilities,new_code_smells,new_security_hotspots,new_coverage,new_duplicated_lines_density,new_lines" \
+              > "$metrics_file" || true
+          fi
+
+          # Build the comment
+          {
+            echo "$marker"
+            echo "## 🔍 SonarQube Analysis Report"
+            echo ""
+
+            # Status indicator
+            if [ "$quality_status" = "OK" ]; then
+              echo "### ✅ Quality Gate: **PASSED**"
+            elif [ "$quality_status" = "ERROR" ]; then
+              echo "### ❌ Quality Gate: **FAILED**"
+            else
+              echo "### ⚠️ Quality Gate: **$quality_status**"
+            fi
+            echo ""
+
+            # Scan status
+            echo "| Check | Status |"
+            echo "| --- | --- |"
+            echo "| Scan execution | \`$SONAR_SCAN_OUTCOME\` |"
+            echo "| Quality gate check | \`$SONAR_GATE_OUTCOME\` |"
+            echo ""
+
+            # Metrics section
+            if [ -s "$metrics_file" ]; then
+              echo "### 📊 Code Metrics"
+              echo ""
+              echo "#### New Code (This PR)"
+              echo "| Metric | Value |"
+              echo "| --- | --- |"
+
+              new_bugs=$(metric_value "new_bugs" "0")
+              new_vulnerabilities=$(metric_value "new_vulnerabilities" "0")
+              new_code_smells=$(metric_value "new_code_smells" "0")
+              new_hotspots=$(metric_value "new_security_hotspots" "0")
+              new_coverage=$(metric_value "new_coverage" "N/A")
+              new_duplications=$(metric_value "new_duplicated_lines_density" "0.0")
+              new_lines=$(metric_value "new_lines" "0")
+
+              echo "| 🐛 Bugs | **$new_bugs** |"
+              echo "| 🔒 Vulnerabilities | **$new_vulnerabilities** |"
+              echo "| 💡 Code Smells | **$new_code_smells** |"
+              echo "| 🔥 Security Hotspots | **$new_hotspots** |"
+              echo "| ✅ Coverage | **$(format_percent "$new_coverage")** |"
+              echo "| 📋 Duplications | **$(format_percent "$new_duplications")** |"
+              echo "| 📏 Lines of Code | **$new_lines** |"
+              echo ""
+
+              echo "#### Overall Project"
+              echo "| Metric | Value |"
+              echo "| --- | --- |"
+
+              total_bugs=$(metric_value "bugs" "0")
+              total_vulnerabilities=$(metric_value "vulnerabilities" "0")
+              total_code_smells=$(metric_value "code_smells" "0")
+              total_hotspots=$(metric_value "security_hotspots" "0")
+              total_coverage=$(metric_value "coverage" "N/A")
+              total_duplications=$(metric_value "duplicated_lines_density" "0.0")
+              total_ncloc=$(metric_value "ncloc" "0")
+
+              echo "| 🐛 Bugs | $total_bugs |"
+              echo "| 🔒 Vulnerabilities | $total_vulnerabilities |"
+              echo "| 💡 Code Smells | $total_code_smells |"
+              echo "| 🔥 Security Hotspots | $total_hotspots |"
+              echo "| ✅ Coverage | $(format_percent "$total_coverage") |"
+              echo "| 📋 Duplications | $(format_percent "$total_duplications") |"
+              echo "| 📏 Lines of Code | $total_ncloc |"
+              echo ""
+            fi
+
+            # Quality gate conditions
+            if [ -s "$qg_file" ]; then
+              echo "### 📋 Quality Gate Conditions"
+              echo ""
+
+              # Show all conditions
+              conditions_output=$(jq -r '
+                .projectStatus.conditions // []
+                | if length == 0 then
+                    "_No conditions configured_"
+                  else
+                    "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
+                    + (map(
+                      if .status == "OK" then
+                        "| ✅ \(.metricKey // "unknown") | **PASSED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                      else
+                        "| ❌ \(.metricKey // "unknown") | **FAILED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                      end
+                    ) | join("\n"))
+                  end
+              ' "$qg_file")
+
+              echo "$conditions_output"
+              echo ""
+            fi
+          } > "$comment_file"
+
+
+      - name: Comment SonarQube report on PR
+        if: github.event_name == 'pull_request' && always()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(`${process.env.RUNNER_TEMP}/sonarqube-pr-comment.md`, 'utf8');
+            const marker = '<!-- sonarqube-pr-comment -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Enforce SonarQube gate
+        if: steps.sonarqube.outcome == 'failure' || steps.sonarqube_gate.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo "### SonarQube gate failed"
+            echo ""
+            echo "- Scan step outcome: \`${{ steps.sonarqube.outcome }}\`"
+            echo "- Quality gate step outcome: \`${{ steps.sonarqube_gate.outcome }}\`"
+            echo "- Check the SonarQube scan and quality gate step logs for the specific failure."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1

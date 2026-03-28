@@ -1,0 +1,13 @@
+title = "Project-specific Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Template credentials in the tracked example environment file"
+paths = [
+  '''^\.env\.example$''',
+]
+regexes = [
+  '''POSTGRES_PASSWORD=clinic_pass''',
+]

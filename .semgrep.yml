@@ -1,0 +1,78 @@
+rules:
+  - id: java-runtime-exec
+    message: Avoid invoking shell commands from application code.
+    severity: ERROR
+    languages:
+      - java
+    patterns:
+      - pattern-either:
+          - pattern: Runtime.getRuntime().exec(...)
+          - pattern: java.lang.Runtime.getRuntime().exec(...)
+    metadata:
+      category: security
+      technology:
+        - java
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command"
+      owasp:
+        - A03:2021 - Injection
+    paths:
+      exclude:
+        - "**/src/backend/target/**"
+
+  - id: java-process-builder
+    message: Review ProcessBuilder usage for command-injection risk.
+    severity: ERROR
+    languages:
+      - java
+    pattern: new ProcessBuilder(...)
+    metadata:
+      category: security
+      technology:
+        - java
+      cwe:
+        - "CWE-78: Improper Neutralization of Special Elements used in an OS Command"
+      owasp:
+        - A03:2021 - Injection
+    paths:
+      exclude:
+        - "**/src/backend/target/**"
+
+  - id: react-dangerously-set-inner-html
+    message: Avoid rendering unsanitized HTML with dangerouslySetInnerHTML.
+    severity: ERROR
+    languages:
+      - javascript
+      - typescript
+    pattern: |
+      <$X dangerouslySetInnerHTML={{ __html: $HTML }} />
+    metadata:
+      category: security
+      technology:
+        - react
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp:
+        - A03:2021 - Injection
+    paths:
+      exclude:
+        - "**/src/frontend/node_modules/**"
+        - "**/src/frontend/dist/**"
+
+  - id: spring-crossorigin-wildcard
+    message: Avoid wildcard CORS origins in production code.
+    severity: ERROR
+    languages:
+      - java
+    pattern: '@CrossOrigin(origins = "*")'
+    metadata:
+      category: security
+      technology:
+        - spring
+      cwe:
+        - "CWE-942: Overly Permissive Cross-domain Policy with Untrusted Domains"
+      owasp:
+        - A05:2021 - Security Misconfiguration
+    paths:
+      exclude:
+        - "**/src/backend/target/**"
