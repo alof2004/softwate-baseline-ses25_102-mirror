@@ -52,7 +52,7 @@ jobs:
           category: "/language:${{ matrix.language }}"
 
   semgrep-comprehensive:
-    name: Semgrep (Comprehensive)
+    name: Semgrep
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -107,7 +107,7 @@ jobs:
         run: exit 1
 
   backend-deep:
-    name: Backend Deep Security Scan
+    name: Backend Scan
     runs-on: ubuntu-latest
     defaults:
       run:

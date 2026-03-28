@@ -97,7 +97,7 @@ jobs:
         run: exit 1
 
   semgrep:
-    name: Semgrep (Fast)
+    name: Semgrep
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -178,7 +178,7 @@ jobs:
         run: exit 1
 
   frontend-deps:
-    name: Frontend Dependency Audit
+    name: Frontend Audit
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -217,7 +217,7 @@ jobs:
         run: exit 1
 
   trivy:
-    name: Trivy Security Scan
+    name: Trivy
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -317,7 +317,7 @@ jobs:
           exit 1
 
   sonarqube:
-    name: SonarQube Analysis
+    name: SonarQube
     runs-on: ubuntu-latest
     services:
       sonarqube:
