@@ -424,6 +424,24 @@ jobs:
           qg_file="$RUNNER_TEMP/sonarqube-quality-gate.json"
           metrics_file="$RUNNER_TEMP/sonarqube-metrics.json"
 
+          metric_value() {
+            local metric="$1"
+            local default_value="$2"
+            jq -r --arg metric "$metric" --arg default_value "$default_value" '
+              first(.component.measures[]? | select(.metric == $metric) | (.period.value // .value))
+              // $default_value
+            ' "$metrics_file" 2>/dev/null || echo "$default_value"
+          }
+
+          format_percent() {
+            local value="$1"
+            if [ "$value" = "N/A" ]; then
+              echo "N/A"
+            else
+              echo "${value}%"
+            fi
+          }
+
           quality_status="UNKNOWN"
 
           # Fetch quality gate status
@@ -473,20 +491,20 @@ jobs:
               echo "| Metric | Value |"
               echo "| --- | --- |"
 
-              new_bugs=$(jq -r '.component.measures[] | select(.metric=="new_bugs") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              new_vulnerabilities=$(jq -r '.component.measures[] | select(.metric=="new_vulnerabilities") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              new_code_smells=$(jq -r '.component.measures[] | select(.metric=="new_code_smells") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              new_hotspots=$(jq -r '.component.measures[] | select(.metric=="new_security_hotspots") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              new_coverage=$(jq -r '.component.measures[] | select(.metric=="new_coverage") | .period.value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              new_duplications=$(jq -r '.component.measures[] | select(.metric=="new_duplicated_lines_density") | .period.value // "0.0"' "$metrics_file" 2>/dev/null || echo "0.0")
-              new_lines=$(jq -r '.component.measures[] | select(.metric=="new_lines") | .period.value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              new_bugs=$(metric_value "new_bugs" "0")
+              new_vulnerabilities=$(metric_value "new_vulnerabilities" "0")
+              new_code_smells=$(metric_value "new_code_smells" "0")
+              new_hotspots=$(metric_value "new_security_hotspots" "0")
+              new_coverage=$(metric_value "new_coverage" "N/A")
+              new_duplications=$(metric_value "new_duplicated_lines_density" "0.0")
+              new_lines=$(metric_value "new_lines" "0")
 
               echo "| 🐛 Bugs | **$new_bugs** |"
               echo "| 🔒 Vulnerabilities | **$new_vulnerabilities** |"
               echo "| 💡 Code Smells | **$new_code_smells** |"
               echo "| 🔥 Security Hotspots | **$new_hotspots** |"
-              echo "| ✅ Coverage | **$new_coverage%** |"
-              echo "| 📋 Duplications | **$new_duplications%** |"
+              echo "| ✅ Coverage | **$(format_percent "$new_coverage")** |"
+              echo "| 📋 Duplications | **$(format_percent "$new_duplications")** |"
               echo "| 📏 Lines of Code | **$new_lines** |"
               echo ""
 
@@ -494,20 +512,20 @@ jobs:
               echo "| Metric | Value |"
               echo "| --- | --- |"
 
-              total_bugs=$(jq -r '.component.measures[] | select(.metric=="bugs") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              total_vulnerabilities=$(jq -r '.component.measures[] | select(.metric=="vulnerabilities") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              total_code_smells=$(jq -r '.component.measures[] | select(.metric=="code_smells") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              total_hotspots=$(jq -r '.component.measures[] | select(.metric=="security_hotspots") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
-              total_coverage=$(jq -r '.component.measures[] | select(.metric=="coverage") | .value // "N/A"' "$metrics_file" 2>/dev/null || echo "N/A")
-              total_duplications=$(jq -r '.component.measures[] | select(.metric=="duplicated_lines_density") | .value // "0.0"' "$metrics_file" 2>/dev/null || echo "0.0")
-              total_ncloc=$(jq -r '.component.measures[] | select(.metric=="ncloc") | .value // "0"' "$metrics_file" 2>/dev/null || echo "0")
+              total_bugs=$(metric_value "bugs" "0")
+              total_vulnerabilities=$(metric_value "vulnerabilities" "0")
+              total_code_smells=$(metric_value "code_smells" "0")
+              total_hotspots=$(metric_value "security_hotspots" "0")
+              total_coverage=$(metric_value "coverage" "N/A")
+              total_duplications=$(metric_value "duplicated_lines_density" "0.0")
+              total_ncloc=$(metric_value "ncloc" "0")
 
               echo "| 🐛 Bugs | $total_bugs |"
               echo "| 🔒 Vulnerabilities | $total_vulnerabilities |"
               echo "| 💡 Code Smells | $total_code_smells |"
               echo "| 🔥 Security Hotspots | $total_hotspots |"
-              echo "| ✅ Coverage | $total_coverage% |"
-              echo "| 📋 Duplications | $total_duplications% |"
+              echo "| ✅ Coverage | $(format_percent "$total_coverage") |"
+              echo "| 📋 Duplications | $(format_percent "$total_duplications") |"
               echo "| 📏 Lines of Code | $total_ncloc |"
               echo ""
             fi
@@ -537,11 +555,6 @@ jobs:
               echo "$conditions_output"
               echo ""
             fi
-
-            # Dashboard link
-            echo "---"
-            echo "📊 [View full analysis on SonarQube Dashboard](${SONAR_HOST_URL}/dashboard?id=clinic-management-app)"
-
           } > "$comment_file"
 
       - name: Comment SonarQube report on PR
