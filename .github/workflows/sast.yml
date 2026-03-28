@@ -362,13 +362,48 @@ jobs:
 
       - name: Configure SonarQube project
         run: |
+          set -euo pipefail
+
           # Wait a bit more for full initialization
           sleep 20
 
+          project_key="clinic-management-app"
+          quality_gate_name="Clinic Management PR Gate"
+
           # Create project using default admin credentials
           curl -u admin:admin -X POST \
-            "http://localhost:9000/api/projects/create?project=clinic-management-app&name=Clinic+Management+Application" \
+            "http://localhost:9000/api/projects/create?project=${project_key}&name=Clinic+Management+Application" \
             || echo "Project may already exist, continuing..."
+
+          # Create and assign a custom quality gate for the ephemeral PR instance.
+          # Coverage is intentionally excluded because tests are not part of this gate.
+          curl -sf -u admin:admin -X POST \
+            --data-urlencode "name=${quality_gate_name}" \
+            "http://localhost:9000/api/qualitygates/create" \
+            || echo "Quality gate may already exist, continuing..."
+
+          create_quality_gate_condition() {
+            local metric="$1"
+            local op="$2"
+            local error="$3"
+
+            curl -sf -u admin:admin -X POST \
+              --data-urlencode "gateName=${quality_gate_name}" \
+              --data-urlencode "metric=${metric}" \
+              --data-urlencode "op=${op}" \
+              --data-urlencode "error=${error}" \
+              "http://localhost:9000/api/qualitygates/create_condition"
+          }
+
+          create_quality_gate_condition "new_reliability_rating" "GT" "1"
+          create_quality_gate_condition "new_security_rating" "GT" "1"
+          create_quality_gate_condition "new_maintainability_rating" "GT" "1"
+          create_quality_gate_condition "new_duplicated_lines_density" "GT" "3"
+
+          curl -sf -u admin:admin -X POST \
+            --data-urlencode "projectKey=${project_key}" \
+            --data-urlencode "gateName=${quality_gate_name}" \
+            "http://localhost:9000/api/qualitygates/select"
 
           # Generate token for analysis
           TOKEN_RESPONSE=$(curl -u admin:admin -X POST \
@@ -465,16 +500,16 @@ jobs:
           # Build the comment
           {
             echo "$marker"
-            echo "## 🔍 SonarQube Analysis Report"
+            echo "## SonarQube Analysis Report"
             echo ""
 
             # Status indicator
             if [ "$quality_status" = "OK" ]; then
-              echo "### ✅ Quality Gate: **PASSED**"
+              echo "### Quality Gate: **Passed**"
             elif [ "$quality_status" = "ERROR" ]; then
-              echo "### ❌ Quality Gate: **FAILED**"
+              echo "### Quality Gate: **Failed**"
             else
-              echo "### ⚠️ Quality Gate: **$quality_status**"
+              echo "### Quality Gate: **$quality_status**"
             fi
             echo ""
 
@@ -487,7 +522,7 @@ jobs:
 
             # Metrics section
             if [ -s "$metrics_file" ]; then
-              echo "### 📊 Code Metrics"
+              echo "### Code Metrics"
               echo ""
               echo "#### New Code (This PR)"
               echo "| Metric | Value |"
@@ -501,13 +536,13 @@ jobs:
               new_duplications=$(metric_value "new_duplicated_lines_density" "0.0")
               new_lines=$(metric_value "new_lines" "0")
 
-              echo "| 🐛 Bugs | **$new_bugs** |"
-              echo "| 🔒 Vulnerabilities | **$new_vulnerabilities** |"
-              echo "| 💡 Code Smells | **$new_code_smells** |"
-              echo "| 🔥 Security Hotspots | **$new_hotspots** |"
-              echo "| ✅ Coverage | **$(format_percent "$new_coverage")** |"
-              echo "| 📋 Duplications | **$(format_percent "$new_duplications")** |"
-              echo "| 📏 Lines of Code | **$new_lines** |"
+              echo "| Bugs | **$new_bugs** |"
+              echo "| Vulnerabilities | **$new_vulnerabilities** |"
+              echo "| Code Smells | **$new_code_smells** |"
+              echo "| Security Hotspots | **$new_hotspots** |"
+              echo "| Coverage | **$(format_percent "$new_coverage")** |"
+              echo "| Duplications | **$(format_percent "$new_duplications")** |"
+              echo "| Lines of Code | **$new_lines** |"
               echo ""
 
               echo "#### Overall Project"
@@ -522,19 +557,19 @@ jobs:
               total_duplications=$(metric_value "duplicated_lines_density" "0.0")
               total_ncloc=$(metric_value "ncloc" "0")
 
-              echo "| 🐛 Bugs | $total_bugs |"
-              echo "| 🔒 Vulnerabilities | $total_vulnerabilities |"
-              echo "| 💡 Code Smells | $total_code_smells |"
-              echo "| 🔥 Security Hotspots | $total_hotspots |"
-              echo "| ✅ Coverage | $(format_percent "$total_coverage") |"
-              echo "| 📋 Duplications | $(format_percent "$total_duplications") |"
-              echo "| 📏 Lines of Code | $total_ncloc |"
+              echo "| Bugs | $total_bugs |"
+              echo "| Vulnerabilities | $total_vulnerabilities |"
+              echo "| Code Smells | $total_code_smells |"
+              echo "| Security Hotspots | $total_hotspots |"
+              echo "| Coverage | $(format_percent "$total_coverage") |"
+              echo "| Duplications | $(format_percent "$total_duplications") |"
+              echo "| Lines of Code | $total_ncloc |"
               echo ""
             fi
 
             # Quality gate conditions
             if [ -s "$qg_file" ]; then
-              echo "### 📋 Quality Gate Conditions"
+              echo "### Quality Gate Conditions"
               echo ""
 
               # Show all conditions
@@ -546,9 +581,9 @@ jobs:
                     "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
                     + (map(
                       if .status == "OK" then
-                        "| ✅ \(.metricKey // "unknown") | **PASSED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                        "| \(.metricKey // "unknown") | **Passed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
                       else
-                        "| ❌ \(.metricKey // "unknown") | **FAILED** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                        "| \(.metricKey // "unknown") | **Failed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
                       end
                     ) | join("\n"))
                   end

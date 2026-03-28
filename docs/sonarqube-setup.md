@@ -239,18 +239,14 @@ If you have a self-hosted GitHub Actions runner on the same network as SonarQube
 
 ### Quality Gate
 
-SonarQube's default "Sonar way" quality gate is reasonable, but you can customize:
+The PR workflow creates and assigns a custom quality gate automatically in the ephemeral SonarQube instance. Coverage is intentionally excluded because test coverage is not part of this repository's PR policy.
 
-1. **Go to Quality Gates** → "Sonar way" → Copy
-2. **Customize thresholds**:
-   - Coverage on New Code: >80%
-   - Duplicated Lines on New Code: <3%
-   - Security Hotspots Reviewed: 100%
-   - Reliability Rating on New Code: A
-   - Security Rating on New Code: A
-   - Maintainability Rating on New Code: A
+Current enforced conditions:
 
-3. **Set as default** for your project
+1. **Reliability Rating on New Code** must remain `A`
+2. **Security Rating on New Code** must remain `A`
+3. **Maintainability Rating on New Code** must remain `A`
+4. **Duplicated Lines on New Code** must stay below `3%`
 
 ### Quality Profiles
 
