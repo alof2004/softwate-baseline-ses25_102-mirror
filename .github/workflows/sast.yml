@@ -299,14 +299,17 @@ jobs:
 
           project_key="clinic-management-app"
           quality_gate_name="Clinic Management PR Gate"
+          sonar_admin_user="admin"
+          sonar_admin_password="admin"
+          sonar_auth="${sonar_admin_user}:${sonar_admin_password}"
 
           # Create project using default admin credentials
-          curl -u admin:admin -X POST \
+          curl -u "${sonar_auth}" -X POST \
             "http://localhost:9000/api/projects/create?project=${project_key}&name=Clinic+Management+Application" \
             || echo "Project may already exist, continuing..."
 
           # Delete existing quality gate if it exists to ensure clean state
-          curl -sf -u admin:admin -X POST \
+          curl -sf -u "${sonar_auth}" -X POST \
             --data-urlencode "name=${quality_gate_name}" \
             "http://localhost:9000/api/qualitygates/destroy" \
             || echo "Quality gate did not exist or could not be deleted, continuing..."
@@ -315,7 +318,7 @@ jobs:
           # Coverage and violations conditions are intentionally excluded because this project
           # does not have tests. Security hotspots review is included to ensure manual review
           # of security-sensitive code.
-          curl -sf -u admin:admin -X POST \
+          curl -sf -u "${sonar_auth}" -X POST \
             --data-urlencode "name=${quality_gate_name}" \
             "http://localhost:9000/api/qualitygates/create"
 
@@ -324,7 +327,7 @@ jobs:
             local op="$2"
             local error="$3"
 
-            curl -sf -u admin:admin -X POST \
+            curl -sf -u "${sonar_auth}" -X POST \
               --data-urlencode "gateName=${quality_gate_name}" \
               --data-urlencode "metric=${metric}" \
               --data-urlencode "op=${op}" \
@@ -339,13 +342,13 @@ jobs:
           create_quality_gate_condition "new_maintainability_rating" "GT" "1"
           create_quality_gate_condition "new_duplicated_lines_density" "GT" "3"
 
-          curl -sf -u admin:admin -X POST \
+          curl -sf -u "${sonar_auth}" -X POST \
             --data-urlencode "projectKey=${project_key}" \
             --data-urlencode "gateName=${quality_gate_name}" \
             "http://localhost:9000/api/qualitygates/select"
 
           # Generate token for analysis
-          TOKEN_RESPONSE=$(curl -u admin:admin -X POST \
+          TOKEN_RESPONSE=$(curl -u "${sonar_auth}" -X POST \
             "http://localhost:9000/api/user_tokens/generate?name=github-actions-${{ github.run_id }}")
 
           # Extract token from JSON response
