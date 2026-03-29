@@ -415,7 +415,9 @@ fi
 
 ### 4. CI/CD Integration - GitHub Actions
 
-**File: `.github/workflows/dast-nightly.yml`**
+**File:** `ses2526-appsec-recipes-ses25_102/.github/workflows/dast-nightly.yml`
+
+The nightly DAST workflow belongs in the appsec repository, not in the software repository. The appsec workflow checks out the software repository and runs the ZAP scan there. Because the workflow runs in the appsec repository, the uploaded SARIF findings appear in the appsec repository Security tab.
 
 ```yaml
 name: DAST Nightly
@@ -441,13 +443,20 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Check out repository
+      - name: Check out software repository
         uses: actions/checkout@v4
+        with:
+          repository: alof2004/softwate-baseline-ses25_102-mirror
+          ref: ${{ inputs.target_ref || env.DEFAULT_TARGET_REF }}
+          path: software
+          token: ${{ secrets.SOFTWARE_REPO_TOKEN || github.token }}
 
       - name: Make DAST scripts executable
+        working-directory: software
         run: chmod +x dast/scripts/*.sh
 
       - name: Run nightly DAST scan
+        working-directory: software
         env:
           COMPOSE_PROJECT_NAME: clinic-dast-nightly-${{ github.run_id }}
         run: ./dast/scripts/run-dast-scan.sh
@@ -458,28 +467,28 @@ jobs:
         with:
           name: dast-nightly-reports
           path: |
-            dast/reports/zap-report.html
-            dast/reports/zap-report.json
-            dast/reports/zap-report.sarif
+            software/dast/reports/zap-report.html
+            software/dast/reports/zap-report.json
+            software/dast/reports/zap-report.sarif
           if-no-files-found: warn
 
       - name: Publish DAST findings to Security tab
-        if: always() && hashFiles('dast/reports/zap-report.sarif') != ''
+        if: always() && hashFiles('software/dast/reports/zap-report.sarif') != ''
         continue-on-error: true
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: dast/reports/zap-report.sarif
+          sarif_file: software/dast/reports/zap-report.sarif
           category: dast-zap-nightly
 
       - name: Summarize DAST findings
-        if: always() && hashFiles('dast/reports/zap-report.json') != ''
+        if: always() && hashFiles('software/dast/reports/zap-report.json') != ''
         run: |
           python3 - <<'PY'
           import json
           import os
           from pathlib import Path
 
-          report = json.loads(Path("dast/reports/zap-report.json").read_text())
+          report = json.loads(Path("software/dast/reports/zap-report.json").read_text())
           summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
 
           alerts = []
@@ -662,7 +671,7 @@ def is_false_positive(alert):
 - [ ] Verify reports are generated correctly
 
 ### Phase 2: CI/CD Integration (Week 1-2)
-- [x] Create `.github/workflows/dast-nightly.yml`
+- [x] Create `ses2526-appsec-recipes-ses25_102/.github/workflows/dast-nightly.yml`
 - [x] Configure GitHub permissions for SARIF upload
 - [ ] Test workflow execution on develop branch
 - [ ] Verify SARIF findings appear in Security tab

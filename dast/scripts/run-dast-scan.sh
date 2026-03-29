@@ -22,6 +22,10 @@ trap cleanup EXIT
 echo "Starting local DAST scan for Clinic Management Application"
 mkdir -p "${REPORTS_DIR}"
 rm -f "${REPORTS_DIR}/zap-report.html" "${REPORTS_DIR}/zap-report.json" "${REPORTS_DIR}/zap-report.sarif" "${REPORTS_DIR}/zap-report.sarif.json"
+# ZAP writes reports from inside a container as the non-root `zap` user. On CI
+# bind mounts, the host directory ownership often does not match that UID, so
+# make the report directory world-writable before starting the scanner.
+chmod 0777 "${REPORTS_DIR}"
 
 docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" up -d --build db backend frontend
 "${ROOT_DIR}/dast/scripts/wait-for-app.sh" 240
