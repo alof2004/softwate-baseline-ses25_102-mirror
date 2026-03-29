@@ -607,6 +607,7 @@ jobs:
           SEMGREP_RESULT: ${{ needs.semgrep.result }}
           ESLINT_RESULT: ${{ needs.eslint-security.result }}
           TRIVY_RESULT: ${{ needs.trivy.result }}
+          ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
         run: |
           summary_file="$RUNNER_TEMP/sast-security-summary.md"

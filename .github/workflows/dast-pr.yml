@@ -143,6 +143,7 @@ jobs:
         if: always()
         env:
           TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           summary_file="$RUNNER_TEMP/dast-pr-summary.md"
 
@@ -152,6 +153,10 @@ jobs:
               echo "## DAST Scan Summary"
               echo ""
               echo "- Target ref: \`${TARGET_REF}\`"
+              echo ""
+              echo "### Workflow Links"
+              echo ""
+              echo "- [Open workflow run and artifacts](${ACTIONS_RUN_URL})"
               echo ""
               echo "**Gate Status:** Failed. ZAP report was not generated."
             } > "$summary_file"
@@ -165,6 +170,7 @@ jobs:
             --summary-file "$summary_file" \
             --target-ref "$TARGET_REF" \
             --marker "<!-- dast-pr-comment -->" \
+            --run-url "$ACTIONS_RUN_URL" \
             --fail-on High
 
           cat "$summary_file" >> "$GITHUB_STEP_SUMMARY"

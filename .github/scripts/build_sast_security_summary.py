@@ -281,6 +281,7 @@ def main() -> int:
 
     output_path = Path(sys.argv[1])
     reports_dir = Path(os.environ.get("SAST_REPORTS_DIR", "reports"))
+    actions_run_url = os.environ.get("ACTIONS_RUN_URL", "").strip()
 
     gitleaks_result = os.environ["GITLEAKS_RESULT"]
     semgrep_result = os.environ["SEMGREP_RESULT"]
@@ -340,7 +341,9 @@ def main() -> int:
         f"| ESLint Security | {format_status(eslint_result)} | {eslint_advisory_summary} |",
         f"| Trivy | {format_status(trivy_result)} | {trivy_advisory_summary} |",
         "",
-        "_Advisory findings do not block the merge gate; they are surfaced for triage._",
+        "### Non-Blocking Issues Found",
+        "",
+        "_These findings do not fail the merge gate, but they should still be reviewed._",
         "",
     ]
 
@@ -368,6 +371,16 @@ def main() -> int:
             reports_dir / "trivy-backend-advisory.sarif",
         ],
     )
+
+    if actions_run_url:
+        lines.extend(
+            [
+                "### Workflow Links",
+                "",
+                f"- [Open workflow run and artifacts]({actions_run_url})",
+                "",
+            ]
+        )
 
     lines.extend(["---", "", "_This summary is automatically updated on each commit._"])
     output_path.write_text("\n".join(lines) + "\n")
