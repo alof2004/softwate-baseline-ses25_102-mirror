@@ -100,6 +100,8 @@ jobs:
   trivy-images:
     name: Trivy Image Scan
     runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILD_SUMMARY: "false"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -191,11 +193,22 @@ jobs:
         if: steps.trivy_backend_image.outcome == 'failure' || steps.trivy_frontend_image.outcome == 'failure'
         shell: bash
         run: |
+          backend_status="passed"
+          frontend_status="passed"
+
+          if [ "${{ steps.trivy_backend_image.outcome }}" = "failure" ]; then
+            backend_status="failed"
+          fi
+
+          if [ "${{ steps.trivy_frontend_image.outcome }}" = "failure" ]; then
+            frontend_status="failed"
+          fi
+
           {
-            echo "### Trivy image scan gate failed"
+            echo "### Image scan gate failed"
             echo ""
-            echo "- Backend image scan outcome: \`${{ steps.trivy_backend_image.outcome }}\`"
-            echo "- Frontend image scan outcome: \`${{ steps.trivy_frontend_image.outcome }}\`"
-            echo "- Review the Trivy scan step logs and uploaded SARIF artifacts for the blocking findings."
+            echo "- Backend image scan: ${backend_status}"
+            echo "- Frontend image scan: ${frontend_status}"
+            echo "- Review the \`Show backend image findings\` and \`Show frontend image findings\` step logs and the uploaded SARIF artifacts for the blocking findings."
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
