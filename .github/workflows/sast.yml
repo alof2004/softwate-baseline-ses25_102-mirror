@@ -510,24 +510,43 @@ jobs:
               echo "### Quality Gate Conditions"
               echo ""
 
-              # Show all conditions
-              conditions_output=$(jq -r '
-                .projectStatus.conditions // []
-                | if length == 0 then
-                    "_No conditions configured_"
-                  else
-                    "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
-                    + (map(
-                      if .status == "OK" then
-                        "| \(.metricKey // "unknown") | **Passed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
-                      else
-                        "| \(.metricKey // "unknown") | **Failed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
-                      end
-                    ) | join("\n"))
-                  end
-              ' "$qg_file")
+              # Check if there are evaluated conditions
+              has_conditions=$(jq -r '.projectStatus.conditions // [] | length' "$qg_file")
 
-              echo "$conditions_output"
+              if [ "$has_conditions" -gt 0 ]; then
+                # Show evaluated conditions
+                conditions_output=$(jq -r '
+                  .projectStatus.conditions
+                  | "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
+                  + (map(
+                    if .status == "OK" then
+                      "| \(.metricKey // "unknown") | **Passed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                    else
+                      "| \(.metricKey // "unknown") | **Failed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
+                    end
+                  ) | join("\n"))
+                ' "$qg_file")
+                echo "$conditions_output"
+              else
+                # No evaluated conditions - fetch the quality gate definition
+                gate_def=$(curl -sf -u "${SONAR_TOKEN}:" \
+                  "${SONAR_HOST_URL}/api/qualitygates/show?name=Clinic+Management+PR+Gate" 2>/dev/null || echo "")
+
+                if [ -n "$gate_def" ] && echo "$gate_def" | jq -e '.conditions' >/dev/null 2>&1; then
+                  gate_conditions=$(echo "$gate_def" | jq -r '
+                    .conditions
+                    | "| Metric | Operator | Threshold |\n| --- | --- | --- |\n"
+                    + (map(
+                      "| \(.metric // "unknown") | \(.op // "GT") | \(.error // "-") |"
+                    ) | join("\n"))
+                  ')
+                  echo "$gate_conditions"
+                  echo ""
+                  echo "_Conditions not evaluated (no new code in this PR)_"
+                else
+                  echo "_No conditions configured_"
+                fi
+              fi
               echo ""
             fi
           } > "$comment_file"
