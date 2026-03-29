@@ -126,6 +126,31 @@ jobs:
           name: semgrep-pr-report
           path: reports/semgrep-pr.sarif
 
+      - name: Run Semgrep advisory scan
+        id: semgrep_advisory
+        continue-on-error: true
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          mkdir -p reports
+          semgrep scan \
+            --config p/security-audit \
+            --config .github/config/security/semgrep.yml \
+            --severity WARNING \
+            --severity INFO \
+            --disable-version-check \
+            --metrics=off \
+            --use-git-ignore \
+            --sarif \
+            --output reports/semgrep-pr-advisory.sarif
+
+      - name: Upload Semgrep advisory report
+        if: always() && hashFiles('reports/semgrep-pr-advisory.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-pr-advisory-report
+          path: reports/semgrep-pr-advisory.sarif
+
       - name: Enforce Semgrep gate
         if: steps.semgrep.outcome == 'failure'
         run: exit 1
@@ -151,7 +176,16 @@ jobs:
       - name: Run ESLint with security rules
         id: eslint
         continue-on-error: true
-        run: npm run lint
+        run: |
+          mkdir -p ../../reports
+          npx eslint . -f json -o ../../reports/eslint-security.json
+
+      - name: Upload ESLint report
+        if: always() && hashFiles('reports/eslint-security.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: eslint-security-report
+          path: reports/eslint-security.json
 
       - name: Enforce ESLint gate
         if: steps.eslint.outcome == 'failure'
@@ -185,6 +219,28 @@ jobs:
         with:
           name: trivy-fs-report
           path: trivy-fs-results.sarif
+
+      - name: Run Trivy filesystem advisory scan
+        id: trivy_fs_advisory
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          trivy-config: '.github/config/security/trivy.yaml'
+          format: 'sarif'
+          output: 'trivy-fs-advisory.sarif'
+          severity: 'LOW,MEDIUM'
+          scanners: 'vuln,misconfig'
+          limit-severities-for-sarif: true
+          exit-code: 0
+
+      - name: Upload Trivy filesystem advisory report
+        if: always() && hashFiles('trivy-fs-advisory.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-fs-advisory-report
+          path: trivy-fs-advisory.sarif
 
       - name: Show Trivy filesystem findings
         if: steps.trivy_fs.outcome == 'failure'
@@ -220,6 +276,28 @@ jobs:
         with:
           name: trivy-backend-report
           path: trivy-backend-results.sarif
+
+      - name: Run Trivy backend advisory scan
+        id: trivy_backend_advisory
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'src/backend'
+          trivy-config: '.github/config/security/trivy.yaml'
+          format: 'sarif'
+          output: 'trivy-backend-advisory.sarif'
+          severity: 'LOW,MEDIUM'
+          scanners: 'vuln'
+          limit-severities-for-sarif: true
+          exit-code: 0
+
+      - name: Upload Trivy backend advisory report
+        if: always() && hashFiles('trivy-backend-advisory.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-backend-advisory-report
+          path: trivy-backend-advisory.sarif
 
       - name: Show Trivy backend findings
         if: steps.trivy_backend.outcome == 'failure'
@@ -484,12 +562,41 @@ jobs:
           name: semgrep-pr-report
           path: reports/
 
-      - name: Download Trivy reports
+      - name: Download Semgrep advisory report
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: semgrep-pr-advisory-report
+          path: reports/
+
+      - name: Download ESLint report
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: eslint-security-report
+          path: reports/
+
+      - name: Download Trivy filesystem report
         if: needs.trivy.result == 'failure'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
-          pattern: trivy-*-report
+          name: trivy-fs-report
+          path: reports/
+
+      - name: Download Trivy backend report
+        if: needs.trivy.result == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: trivy-backend-report
+          path: reports/
+
+      - name: Download Trivy advisory reports
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: trivy-*-advisory-report
           path: reports/
           merge-multiple: true
 
