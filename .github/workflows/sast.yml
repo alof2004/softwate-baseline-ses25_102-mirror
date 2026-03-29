@@ -305,25 +305,24 @@ jobs:
             "http://localhost:9000/api/projects/create?project=${project_key}&name=Clinic+Management+Application" \
             || echo "Project may already exist, continuing..."
 
-          # Create and assign a custom quality gate for the ephemeral PR instance.
-          # Coverage is intentionally excluded because tests are not part of this gate.
+          # Delete existing quality gate if it exists to ensure clean state
           curl -sf -u admin:admin -X POST \
             --data-urlencode "name=${quality_gate_name}" \
-            "http://localhost:9000/api/qualitygates/create" \
-            || echo "Quality gate may already exist, continuing..."
+            "http://localhost:9000/api/qualitygates/destroy" \
+            || echo "Quality gate did not exist or could not be deleted, continuing..."
+
+          # Create a fresh custom quality gate for the ephemeral PR instance.
+          # Coverage and violations conditions are intentionally excluded because this project
+          # does not have tests. Security hotspots review is included to ensure manual review
+          # of security-sensitive code.
+          curl -sf -u admin:admin -X POST \
+            --data-urlencode "name=${quality_gate_name}" \
+            "http://localhost:9000/api/qualitygates/create"
 
           create_quality_gate_condition() {
             local metric="$1"
             local op="$2"
             local error="$3"
-
-            if curl -sf -u admin:admin --get \
-              --data-urlencode "name=${quality_gate_name}" \
-              "http://localhost:9000/api/qualitygates/show" \
-              | jq -e --arg metric "$metric" '.conditions[]? | select(.metric == $metric)' >/dev/null; then
-              echo "Quality gate condition for ${metric} already exists, continuing..."
-              return 0
-            fi
 
             curl -sf -u admin:admin -X POST \
               --data-urlencode "gateName=${quality_gate_name}" \
@@ -333,8 +332,10 @@ jobs:
               "http://localhost:9000/api/qualitygates/create_condition"
           }
 
+          # Only add conditions for code quality metrics (no coverage or violations)
           create_quality_gate_condition "new_reliability_rating" "GT" "1"
           create_quality_gate_condition "new_security_rating" "GT" "1"
+          create_quality_gate_condition "new_security_hotspots_reviewed" "LT" "100"
           create_quality_gate_condition "new_maintainability_rating" "GT" "1"
           create_quality_gate_condition "new_duplicated_lines_density" "GT" "3"
 
@@ -507,45 +508,65 @@ jobs:
 
             # Quality gate conditions
             if [ -s "$qg_file" ]; then
-              echo "### Quality Gate Conditions"
+              echo "### Quality Gate Requirements"
               echo ""
 
               # Check if there are evaluated conditions
               has_conditions=$(jq -r '.projectStatus.conditions // [] | length' "$qg_file")
 
               if [ "$has_conditions" -gt 0 ]; then
-                # Show evaluated conditions
-                conditions_output=$(jq -r '
-                  .projectStatus.conditions
-                  | "| Metric | Status | Actual | Threshold |\n| --- | --- | --- | --- |\n"
-                  + (map(
-                    if .status == "OK" then
-                      "| \(.metricKey // "unknown") | **Passed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
-                    else
-                      "| \(.metricKey // "unknown") | **Failed** | \(.actualValue // "-") | ≤ \(.errorThreshold // "-") |"
-                    end
-                  ) | join("\n"))
-                ' "$qg_file")
-                echo "$conditions_output"
-              else
-                # No evaluated conditions - fetch the quality gate definition
-                gate_def=$(curl -sf -u "${SONAR_TOKEN}:" \
-                  "${SONAR_HOST_URL}/api/qualitygates/show?name=Clinic+Management+PR+Gate" 2>/dev/null || echo "")
+                # Show evaluated conditions with user-friendly descriptions
+                python3 - <<'PY' >> "$comment_file"
+import json
+import os
+from pathlib import Path
 
-                if [ -n "$gate_def" ] && echo "$gate_def" | jq -e '.conditions' >/dev/null 2>&1; then
-                  gate_conditions=$(echo "$gate_def" | jq -r '
-                    .conditions
-                    | "| Metric | Operator | Threshold |\n| --- | --- | --- |\n"
-                    + (map(
-                      "| \(.metric // "unknown") | \(.op // "GT") | \(.error // "-") |"
-                    ) | join("\n"))
-                  ')
-                  echo "$gate_conditions"
-                  echo ""
-                  echo "_Conditions not evaluated (no new code in this PR)_"
-                else
-                  echo "_No conditions configured_"
-                fi
+qg_file = Path(os.environ["RUNNER_TEMP"] + "/sonarqube-quality-gate.json")
+qg_data = json.loads(qg_file.read_text())
+conditions = qg_data.get("projectStatus", {}).get("conditions", [])
+
+metric_descriptions = {
+    "new_reliability_rating": ("No bugs in new code", "Bugs found"),
+    "new_security_rating": ("No vulnerabilities in new code", "Vulnerabilities found"),
+    "new_security_hotspots_reviewed": ("All security hotspots reviewed", "Security hotspots need review"),
+    "new_maintainability_rating": ("No code smells in new code", "Code smells found"),
+    "new_duplicated_lines_density": ("Less than 3% code duplication", "Too much duplicated code"),
+}
+
+for condition in conditions:
+    metric = condition.get("metricKey", "unknown")
+    status = condition.get("status", "UNKNOWN")
+    actual = condition.get("actualValue", "-")
+
+    if metric in metric_descriptions:
+        pass_desc, fail_desc = metric_descriptions[metric]
+        if status == "OK":
+            print(f"- {pass_desc}")
+        else:
+            print(f"- **FAILED**: {fail_desc}")
+            if metric == "new_duplicated_lines_density":
+                print(f"  - Duplication: {actual}%")
+            elif "rating" in metric:
+                rating_map = {"1": "A (0 issues)", "2": "B (minor)", "3": "C (major)", "4": "D (critical)", "5": "E (blocker)"}
+                print(f"  - Rating: {rating_map.get(actual, actual)}")
+            elif metric == "new_security_hotspots_reviewed":
+                print(f"  - Reviewed: {actual}%")
+    else:
+        # Fallback for unknown metrics
+        status_text = "Passed" if status == "OK" else "**FAILED**"
+        print(f"- {metric}: {status_text}")
+PY
+              else
+                # No evaluated conditions - show what will be checked
+                echo "Your PR will be checked for:"
+                echo ""
+                echo "- No bugs in new code"
+                echo "- No vulnerabilities in new code"
+                echo "- All security hotspots reviewed"
+                echo "- No code smells in new code"
+                echo "- Less than 3% code duplication"
+                echo ""
+                echo "_These conditions will be evaluated when you add new code to this PR._"
               fi
               echo ""
             fi
