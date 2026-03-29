@@ -459,6 +459,9 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Download Gitleaks report
         if: needs.gitleaks.result == 'failure'
         continue-on-error: true
