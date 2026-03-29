@@ -221,72 +221,16 @@ jobs:
 
           # Add backend vulnerabilities table if it failed
           if [ -f "trivy-backend-findings.json" ] && [ "$backend_status" = "failed" ]; then
-            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json
-          from pathlib import Path
-
-          findings = json.loads(Path("trivy-backend-findings.json").read_text())
-
-          print("### Backend Image Vulnerabilities\n")
-          print("| Package | Vulnerability | Severity | Installed | Fixed |")
-          print("| --- | --- | --- | --- | --- |")
-
-          count = 0
-          for result in findings.get("Results", []):
-              for vuln in result.get("Vulnerabilities", []):
-                  if vuln.get("Severity") in ["HIGH", "CRITICAL"]:
-                      pkg = vuln.get("PkgName", "unknown")
-                      vuln_id = vuln.get("VulnerabilityID", "unknown")
-                      severity = vuln.get("Severity", "unknown")
-                      installed = vuln.get("InstalledVersion", "unknown")
-                      fixed = vuln.get("FixedVersion", "not available")
-                      print(f"| {pkg} | {vuln_id} | {severity} | {installed} | {fixed} |")
-                      count += 1
-                      if count >= 20:
-                          break
-              if count >= 20:
-                  break
-
-          if count == 0:
-              print("| No HIGH/CRITICAL vulnerabilities found | - | - | - | - |")
-          elif count >= 20:
-              print(f"\n_Showing top 20 vulnerabilities. See full report in artifacts._\n")
-          PY
+            python3 .github/scripts/render_trivy_summary.py \
+              "Backend Image Vulnerabilities" \
+              trivy-backend-findings.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
           # Add frontend vulnerabilities table if it failed
           if [ -f "trivy-frontend-findings.json" ] && [ "$frontend_status" = "failed" ]; then
-            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json
-          from pathlib import Path
-
-          findings = json.loads(Path("trivy-frontend-findings.json").read_text())
-
-          print("### Frontend Image Vulnerabilities\n")
-          print("| Package | Vulnerability | Severity | Installed | Fixed |")
-          print("| --- | --- | --- | --- | --- |")
-
-          count = 0
-          for result in findings.get("Results", []):
-              for vuln in result.get("Vulnerabilities", []):
-                  if vuln.get("Severity") in ["HIGH", "CRITICAL"]:
-                      pkg = vuln.get("PkgName", "unknown")
-                      vuln_id = vuln.get("VulnerabilityID", "unknown")
-                      severity = vuln.get("Severity", "unknown")
-                      installed = vuln.get("InstalledVersion", "unknown")
-                      fixed = vuln.get("FixedVersion", "not available")
-                      print(f"| {pkg} | {vuln_id} | {severity} | {installed} | {fixed} |")
-                      count += 1
-                      if count >= 20:
-                          break
-              if count >= 20:
-                  break
-
-          if count == 0:
-              print("| No HIGH/CRITICAL vulnerabilities found | - | - | - | - |")
-          elif count >= 20:
-              print(f"\n_Showing top 20 vulnerabilities. See full report in artifacts._\n")
-          PY
+            python3 .github/scripts/render_trivy_summary.py \
+              "Frontend Image Vulnerabilities" \
+              trivy-frontend-findings.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
           if [ "${has_failures}" -eq 1 ]; then
