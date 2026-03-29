@@ -148,14 +148,15 @@ jobs:
           name: trivy-backend-image-report
           path: trivy-backend-image.sarif
 
-      - name: Show backend image findings
+      - name: Generate backend findings JSON
         if: steps.trivy_backend_image.outcome == 'failure'
         continue-on-error: true
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           scan-type: 'image'
           image-ref: 'clinic-backend:nightly'
-          format: 'table'
+          format: 'json'
+          output: 'trivy-backend-findings.json'
           severity: 'HIGH,CRITICAL'
           exit-code: 0
 
@@ -178,37 +179,129 @@ jobs:
           name: trivy-frontend-image-report
           path: trivy-frontend-image.sarif
 
-      - name: Show frontend image findings
+      - name: Generate frontend findings JSON
         if: steps.trivy_frontend_image.outcome == 'failure'
         continue-on-error: true
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           scan-type: 'image'
           image-ref: 'clinic-frontend:nightly'
-          format: 'table'
+          format: 'json'
+          output: 'trivy-frontend-findings.json'
           severity: 'HIGH,CRITICAL'
           exit-code: 0
 
-      - name: Enforce Trivy image gate
-        if: steps.trivy_backend_image.outcome == 'failure' || steps.trivy_frontend_image.outcome == 'failure'
+      - name: Build summary and enforce gate
+        if: always()
         shell: bash
         run: |
           backend_status="passed"
           frontend_status="passed"
+          has_failures=0
 
           if [ "${{ steps.trivy_backend_image.outcome }}" = "failure" ]; then
             backend_status="failed"
+            has_failures=1
           fi
 
           if [ "${{ steps.trivy_frontend_image.outcome }}" = "failure" ]; then
             frontend_status="failed"
+            has_failures=1
           fi
 
           {
-            echo "### Image scan gate failed"
+            echo "## Trivy Image Scan Summary"
             echo ""
-            echo "- Backend image scan: ${backend_status}"
-            echo "- Frontend image scan: ${frontend_status}"
-            echo "- Review the \`Show backend image findings\` and \`Show frontend image findings\` step logs and the uploaded SARIF artifacts for the blocking findings."
+            echo "| Image | Status |"
+            echo "| --- | --- |"
+            echo "| Backend | **${backend_status}** |"
+            echo "| Frontend | **${frontend_status}** |"
+            echo ""
           } >> "$GITHUB_STEP_SUMMARY"
-          exit 1
+
+          # Add backend vulnerabilities table if it failed
+          if [ -f "trivy-backend-findings.json" ] && [ "$backend_status" = "failed" ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+
+          findings = json.loads(Path("trivy-backend-findings.json").read_text())
+
+          print("### Backend Image Vulnerabilities\n")
+          print("| Package | Vulnerability | Severity | Installed | Fixed |")
+          print("| --- | --- | --- | --- | --- |")
+
+          count = 0
+          for result in findings.get("Results", []):
+              for vuln in result.get("Vulnerabilities", []):
+                  if vuln.get("Severity") in ["HIGH", "CRITICAL"]:
+                      pkg = vuln.get("PkgName", "unknown")
+                      vuln_id = vuln.get("VulnerabilityID", "unknown")
+                      severity = vuln.get("Severity", "unknown")
+                      installed = vuln.get("InstalledVersion", "unknown")
+                      fixed = vuln.get("FixedVersion", "not available")
+                      print(f"| {pkg} | {vuln_id} | {severity} | {installed} | {fixed} |")
+                      count += 1
+                      if count >= 20:
+                          break
+              if count >= 20:
+                  break
+
+          if count == 0:
+              print("| No HIGH/CRITICAL vulnerabilities found | - | - | - | - |")
+          elif count >= 20:
+              print(f"\n_Showing top 20 vulnerabilities. See full report in artifacts._\n")
+          PY
+          fi
+
+          # Add frontend vulnerabilities table if it failed
+          if [ -f "trivy-frontend-findings.json" ] && [ "$frontend_status" = "failed" ]; then
+            python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+
+          findings = json.loads(Path("trivy-frontend-findings.json").read_text())
+
+          print("### Frontend Image Vulnerabilities\n")
+          print("| Package | Vulnerability | Severity | Installed | Fixed |")
+          print("| --- | --- | --- | --- | --- |")
+
+          count = 0
+          for result in findings.get("Results", []):
+              for vuln in result.get("Vulnerabilities", []):
+                  if vuln.get("Severity") in ["HIGH", "CRITICAL"]:
+                      pkg = vuln.get("PkgName", "unknown")
+                      vuln_id = vuln.get("VulnerabilityID", "unknown")
+                      severity = vuln.get("Severity", "unknown")
+                      installed = vuln.get("InstalledVersion", "unknown")
+                      fixed = vuln.get("FixedVersion", "not available")
+                      print(f"| {pkg} | {vuln_id} | {severity} | {installed} | {fixed} |")
+                      count += 1
+                      if count >= 20:
+                          break
+              if count >= 20:
+                  break
+
+          if count == 0:
+              print("| No HIGH/CRITICAL vulnerabilities found | - | - | - | - |")
+          elif count >= 20:
+              print(f"\n_Showing top 20 vulnerabilities. See full report in artifacts._\n")
+          PY
+          fi
+
+          if [ "${has_failures}" -eq 1 ]; then
+            {
+              echo ""
+              echo "---"
+              echo ""
+              echo "**Gate Status:** ❌ Failed"
+              echo ""
+              echo "Review the SARIF artifacts for complete findings."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          else
+            {
+              echo ""
+              echo "**Gate Status:** ✅ Passed"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
