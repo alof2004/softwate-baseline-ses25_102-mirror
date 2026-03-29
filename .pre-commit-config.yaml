@@ -1,0 +1,26 @@
+# Compatibility copy for existing pre-commit hook installations.
+# The canonical security tooling config lives in .github/config/security/pre-commit.yaml.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        args:
+          - --config=.github/config/security/gitleaks.toml
+
+  - repo: https://github.com/semgrep/pre-commit
+    rev: v1.145.0
+    hooks:
+      - id: semgrep
+        name: semgrep (security - fast)
+        args:
+          - --config
+          - p/security-audit
+          - --config
+          - .github/config/security/semgrep.yml
+          - --severity
+          - ERROR
+          - --error
+          - --disable-version-check
+          - --metrics=off
+          - --use-git-ignore
