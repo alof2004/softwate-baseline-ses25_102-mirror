@@ -97,37 +97,105 @@ jobs:
         if: steps.semgrep.outcome == 'failure'
         run: exit 1
 
-  backend-deep:
-    name: Backend Scan
+  trivy-images:
+    name: Trivy Image Scan
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/backend
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4.5.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v6
         with:
-          distribution: temurin
-          java-version: "21"
+          context: ./src/backend
+          file: ./src/backend/Dockerfile
+          tags: clinic-backend:nightly
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Run backend deep scan (SpotBugs + FindSecBugs)
-        id: backend_scan
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/frontend
+          file: ./src/frontend/Dockerfile
+          tags: clinic-frontend:nightly
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan backend image with Trivy
+        id: trivy_backend_image
         continue-on-error: true
-        run: |
-          ./mvnw -B -Psecurity-sast -DskipTests verify
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'image'
+          image-ref: 'clinic-backend:nightly'
+          format: 'sarif'
+          output: 'trivy-backend-image.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: 1
 
-      - name: Upload backend nightly reports
-        if: always()
+      - name: Upload backend image scan report
+        if: always() && hashFiles('trivy-backend-image.sarif') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: backend-nightly-security-reports
-          path: |
-            src/backend/target/spotbugsXml.xml
-          if-no-files-found: warn
+          name: trivy-backend-image-report
+          path: trivy-backend-image.sarif
 
-      - name: Enforce backend nightly gate
-        if: steps.backend_scan.outcome == 'failure'
-        run: exit 1
+      - name: Show backend image findings
+        if: steps.trivy_backend_image.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'image'
+          image-ref: 'clinic-backend:nightly'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: 0
+
+      - name: Scan frontend image with Trivy
+        id: trivy_frontend_image
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'image'
+          image-ref: 'clinic-frontend:nightly'
+          format: 'sarif'
+          output: 'trivy-frontend-image.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: 1
+
+      - name: Upload frontend image scan report
+        if: always() && hashFiles('trivy-frontend-image.sarif') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-frontend-image-report
+          path: trivy-frontend-image.sarif
+
+      - name: Show frontend image findings
+        if: steps.trivy_frontend_image.outcome == 'failure'
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          scan-type: 'image'
+          image-ref: 'clinic-frontend:nightly'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: 0
+
+      - name: Enforce Trivy image gate
+        if: steps.trivy_backend_image.outcome == 'failure' || steps.trivy_frontend_image.outcome == 'failure'
+        shell: bash
+        run: |
+          {
+            echo "### Trivy image scan gate failed"
+            echo ""
+            echo "- Backend image scan outcome: \`${{ steps.trivy_backend_image.outcome }}\`"
+            echo "- Frontend image scan outcome: \`${{ steps.trivy_frontend_image.outcome }}\`"
+            echo "- Review the Trivy scan step logs and uploaded SARIF artifacts for the blocking findings."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
