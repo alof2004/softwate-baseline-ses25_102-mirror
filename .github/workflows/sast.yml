@@ -520,45 +520,45 @@ jobs:
               if [ "$has_conditions" -gt 0 ]; then
                 # Show evaluated conditions with user-friendly descriptions
                 python3 - <<'PY' >> "$comment_file"
-import json
-import os
-from pathlib import Path
+                import json
+                import os
+                from pathlib import Path
 
-qg_file = Path(os.environ["RUNNER_TEMP"] + "/sonarqube-quality-gate.json")
-qg_data = json.loads(qg_file.read_text())
-conditions = qg_data.get("projectStatus", {}).get("conditions", [])
+                qg_file = Path(os.environ["RUNNER_TEMP"] + "/sonarqube-quality-gate.json")
+                qg_data = json.loads(qg_file.read_text())
+                conditions = qg_data.get("projectStatus", {}).get("conditions", [])
 
-metric_descriptions = {
-    "new_reliability_rating": ("No bugs in new code", "Bugs found"),
-    "new_security_rating": ("No vulnerabilities in new code", "Vulnerabilities found"),
-    "new_security_hotspots_reviewed": ("All security hotspots reviewed", "Security hotspots need review"),
-    "new_maintainability_rating": ("No code smells in new code", "Code smells found"),
-    "new_duplicated_lines_density": ("Less than 3% code duplication", "Too much duplicated code"),
-}
+                metric_descriptions = {
+                    "new_reliability_rating": ("No bugs in new code", "Bugs found"),
+                    "new_security_rating": ("No vulnerabilities in new code", "Vulnerabilities found"),
+                    "new_security_hotspots_reviewed": ("All security hotspots reviewed", "Security hotspots need review"),
+                    "new_maintainability_rating": ("No code smells in new code", "Code smells found"),
+                    "new_duplicated_lines_density": ("Less than 3% code duplication", "Too much duplicated code"),
+                }
 
-for condition in conditions:
-    metric = condition.get("metricKey", "unknown")
-    status = condition.get("status", "UNKNOWN")
-    actual = condition.get("actualValue", "-")
+                for condition in conditions:
+                    metric = condition.get("metricKey", "unknown")
+                    status = condition.get("status", "UNKNOWN")
+                    actual = condition.get("actualValue", "-")
 
-    if metric in metric_descriptions:
-        pass_desc, fail_desc = metric_descriptions[metric]
-        if status == "OK":
-            print(f"- {pass_desc}")
-        else:
-            print(f"- **FAILED**: {fail_desc}")
-            if metric == "new_duplicated_lines_density":
-                print(f"  - Duplication: {actual}%")
-            elif "rating" in metric:
-                rating_map = {"1": "A (0 issues)", "2": "B (minor)", "3": "C (major)", "4": "D (critical)", "5": "E (blocker)"}
-                print(f"  - Rating: {rating_map.get(actual, actual)}")
-            elif metric == "new_security_hotspots_reviewed":
-                print(f"  - Reviewed: {actual}%")
-    else:
-        # Fallback for unknown metrics
-        status_text = "Passed" if status == "OK" else "**FAILED**"
-        print(f"- {metric}: {status_text}")
-PY
+                    if metric in metric_descriptions:
+                        pass_desc, fail_desc = metric_descriptions[metric]
+                        if status == "OK":
+                            print(f"- {pass_desc}")
+                        else:
+                            print(f"- **FAILED**: {fail_desc}")
+                            if metric == "new_duplicated_lines_density":
+                                print(f"  - Duplication: {actual}%")
+                            elif "rating" in metric:
+                                rating_map = {"1": "A (0 issues)", "2": "B (minor)", "3": "C (major)", "4": "D (critical)", "5": "E (blocker)"}
+                                print(f"  - Rating: {rating_map.get(actual, actual)}")
+                            elif metric == "new_security_hotspots_reviewed":
+                                print(f"  - Reviewed: {actual}%")
+                    else:
+                        # Fallback for unknown metrics
+                        status_text = "Passed" if status == "OK" else "**FAILED**"
+                        print(f"- {metric}: {status_text}")
+                PY
               else
                 # No evaluated conditions - show what will be checked
                 echo "Your PR will be checked for:"
