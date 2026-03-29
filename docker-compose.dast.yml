@@ -71,7 +71,7 @@ services:
       - /zap/wrk/automation-plan.yaml
       - -config
       - api.disablekey=true
-    user: zap
+    user: root
 
 volumes:
   pgdata_dast:
