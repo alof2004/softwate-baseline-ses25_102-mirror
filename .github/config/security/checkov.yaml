@@ -22,7 +22,7 @@ framework:
 
 # Output settings
 output: sarif
-output-file-path: checkov-report.sarif
+output-file-path: .reports/security/checkov-report.sarif
 
 # Fail on severity
 # compact: true

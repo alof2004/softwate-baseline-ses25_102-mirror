@@ -45,7 +45,7 @@ jobs:
             -w /repo \
             ghcr.io/gitleaks/gitleaks:v8.30.1 \
             git . \
-            --config=.gitleaks.toml \
+            --config=.github/config/security/gitleaks.toml \
             --log-opts="${{ steps.range.outputs.log_opts }}" \
             --report-format sarif \
             --report-path reports/gitleaks-pr.sarif \
@@ -69,7 +69,7 @@ jobs:
             -w /repo \
             ghcr.io/gitleaks/gitleaks:v8.30.1 \
             git . \
-            --config=.gitleaks.toml \
+            --config=.github/config/security/gitleaks.toml \
             --log-opts="${{ steps.range.outputs.log_opts }}" \
             --report-format json \
             --report-path reports/gitleaks-pr.json \
@@ -110,7 +110,7 @@ jobs:
           mkdir -p reports
           semgrep scan \
             --config p/security-audit \
-            --config .semgrep.yml \
+            --config .github/config/security/semgrep.yml \
             --severity ERROR \
             --error \
             --disable-version-check \
@@ -392,6 +392,9 @@ jobs:
         id: sonarqube
         continue-on-error: true
         uses: SonarSource/sonarqube-scan-action@v6.0.0
+        with:
+          args: >
+            -Dproject.settings=.github/config/security/sonar-project.properties
         env:
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}

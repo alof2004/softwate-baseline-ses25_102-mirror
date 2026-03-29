@@ -114,7 +114,7 @@ Install and enable the local hooks:
 
 ```bash
 python3 -m pip install --user pre-commit
-pre-commit install
+pre-commit install --config .github/config/security/pre-commit.yaml
 ```
 
 If your system blocks `pip install --user` with an externally-managed Python environment, create a virtual environment or use `pipx` instead.
@@ -122,8 +122,10 @@ If your system blocks `pip install --user` with an externally-managed Python env
 Run the local SAST hooks against all tracked files:
 
 ```bash
-pre-commit run --all-files
+pre-commit run --all-files --config .github/config/security/pre-commit.yaml
 ```
+
+The CI and local security tool configs live under `.github/config/security/` to keep the repository root focused on application code and primary project files.
 
 ### Backend deep scan
 

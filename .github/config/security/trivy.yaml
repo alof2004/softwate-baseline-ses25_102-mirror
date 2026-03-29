@@ -36,7 +36,7 @@ misconfig:
 
 # Report settings
 format: sarif
-output: trivy-report.sarif
+output: .reports/security/trivy-report.sarif
 
 # Severity threshold
 severity: HIGH,CRITICAL

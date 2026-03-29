@@ -76,7 +76,7 @@ jobs:
             --config p/owasp-top-ten \
             --config p/java \
             --config p/javascript \
-            --config .semgrep.yml \
+            --config .github/config/security/semgrep.yml \
             --severity ERROR \
             --severity WARNING \
             --error \

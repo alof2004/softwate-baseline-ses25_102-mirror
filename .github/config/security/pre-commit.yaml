@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: gitleaks
         args:
-          - --config=.gitleaks.toml
+          - --config=.github/config/security/gitleaks.toml
 
   - repo: https://github.com/semgrep/pre-commit
     rev: v1.145.0
@@ -15,7 +15,7 @@ repos:
           - --config
           - p/security-audit
           - --config
-          - .semgrep.yml
+          - .github/config/security/semgrep.yml
           - --severity
           - ERROR
           - --error
