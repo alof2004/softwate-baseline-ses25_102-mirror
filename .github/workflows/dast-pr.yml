@@ -1,0 +1,168 @@
+name: DAST - PR Checks
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: dast-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  zap-baseline:
+    name: OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create Docker network
+        run: docker network create dast-network
+
+      - name: Start PostgreSQL database
+        run: |
+          docker run -d \
+            --name postgres \
+            --network dast-network \
+            -e POSTGRES_DB=clinic_db \
+            -e POSTGRES_USER=clinic_user \
+            -e POSTGRES_PASSWORD=clinic_pass \
+            postgres:16-alpine
+
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U clinic_user -d clinic_db >/dev/null 2>&1; then
+              echo "PostgreSQL is ready!"
+              break
+            fi
+            echo "Attempt $i: PostgreSQL not ready yet, waiting..."
+            sleep 2
+          done
+
+      - name: Build and start backend
+        run: |
+          docker build -t clinic-backend:dast ./src/backend
+          docker run -d \
+            --name backend \
+            --network dast-network \
+            -p 18080:8080 \
+            -e SERVER_PORT=8080 \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/clinic_db \
+            -e SPRING_DATASOURCE_USERNAME=clinic_user \
+            -e SPRING_DATASOURCE_PASSWORD=clinic_pass \
+            -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+            clinic-backend:dast
+
+      - name: Build and start frontend
+        run: |
+          docker build -t clinic-frontend:dast ./src/frontend
+          docker run -d \
+            --name frontend \
+            --network dast-network \
+            -p 15173:5173 \
+            -e VITE_API_BASE_URL=/api \
+            -e VITE_PROXY_TARGET=http://backend:8080 \
+            clinic-frontend:dast
+
+      - name: Wait for application to be ready
+        run: |
+          backend_url="http://localhost:18080/api/patients"
+          frontend_url="http://localhost:15173/patients"
+          timeout_seconds=240
+          start_time="$(date +%s)"
+
+          echo "Waiting for backend at ${backend_url}"
+          echo "Waiting for frontend at ${frontend_url}"
+
+          while true; do
+            if curl -fsS "${backend_url}" >/dev/null 2>&1 && curl -fsS "${frontend_url}" >/dev/null 2>&1; then
+              echo "Application is reachable."
+              break
+            fi
+
+            now="$(date +%s)"
+            if [ $((now - start_time)) -ge "${timeout_seconds}" ]; then
+              echo "Timed out waiting for the application to become ready." >&2
+              docker logs backend || true
+              docker logs frontend || true
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+      - name: Run OWASP ZAP baseline scan
+        run: |
+          mkdir -p dast/reports
+          chmod 0777 dast/reports
+
+          set +e
+          docker run --rm \
+            --network dast-network \
+            -v "$PWD/dast/reports:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t "http://frontend:5173" \
+            -a \
+            -j \
+            -I \
+            -m 2 \
+            -D 5 \
+            -r zap-report.html \
+            -J zap-report.json \
+            --autooff
+          scan_exit_code=$?
+          set -e
+
+          echo "ZAP exited with code ${scan_exit_code}."
+          if [ ! -f "dast/reports/zap-report.json" ]; then
+            echo "ZAP did not produce dast/reports/zap-report.json" >&2
+            exit 1
+          fi
+
+      - name: Upload DAST reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-pr-reports
+          path: |
+            dast/reports/zap-report.html
+            dast/reports/zap-report.json
+          if-no-files-found: warn
+
+      - name: Enforce DAST gate
+        if: always()
+        env:
+          TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+        run: |
+          if [ ! -f "dast/reports/zap-report.json" ]; then
+            {
+              echo "## DAST Scan Summary"
+              echo ""
+              echo "- Target ref: \`${TARGET_REF}\`"
+              echo ""
+              echo "**Gate Status:** Failed. ZAP report was not generated."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          python3 .github/scripts/evaluate_zap_report.py \
+            --report dast/reports/zap-report.json \
+            --summary-file "$GITHUB_STEP_SUMMARY" \
+            --target-ref "$TARGET_REF" \
+            --fail-on High
+
+      - name: Clean up Docker containers
+        if: always()
+        run: |
+          docker stop frontend backend postgres || true
+          docker rm frontend backend postgres || true
+          docker network rm dast-network || true
