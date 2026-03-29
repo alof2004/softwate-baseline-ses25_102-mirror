@@ -1,0 +1,89 @@
+env:
+  contexts:
+    - name: Clinic Management App
+      urls:
+        - http://frontend:5173/patients
+        - http://frontend:5173/appointments
+        - http://backend:8080/api/patients
+        - http://backend:8080/api/appointments
+      includePaths:
+        - http://frontend:5173/patients.*
+        - http://frontend:5173/appointments.*
+        - http://backend:8080/api/.*
+      excludePaths:
+        - http://frontend:5173/@vite/.*
+        - http://frontend:5173/src/.*
+        - http://frontend:5173/node_modules/.*
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: passiveScan-config
+    parameters:
+      scanOnlyInScope: true
+      maxAlertsPerRule: 10
+      enableTags: false
+
+  - type: spider
+    parameters:
+      context: Clinic Management App
+      url: http://frontend:5173/patients
+      maxDuration: 1
+      maxDepth: 4
+      maxChildren: 12
+
+  - type: spider
+    parameters:
+      context: Clinic Management App
+      url: http://frontend:5173/appointments
+      maxDuration: 1
+      maxDepth: 4
+      maxChildren: 12
+
+  - type: spider
+    parameters:
+      context: Clinic Management App
+      url: http://backend:8080/api/patients
+      maxDuration: 1
+      maxDepth: 4
+      maxChildren: 12
+
+  - type: spider
+    parameters:
+      context: Clinic Management App
+      url: http://backend:8080/api/appointments
+      maxDuration: 1
+      maxDepth: 4
+      maxChildren: 12
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/reports
+      reportFile: zap-report.html
+      reportTitle: DAST PR Baseline Scan - Clinic Management App
+      reportDescription: Lightweight OWASP ZAP baseline scan for PR comparison
+      displayReport: false
+
+  - type: report
+    parameters:
+      template: sarif-json
+      reportDir: /zap/reports
+      reportFile: zap-report.sarif
+      reportTitle: DAST PR Baseline Scan - Clinic Management App
+      reportDescription: SARIF report for PR DAST comparison artifacts
+      displayReport: false
+
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/reports
+      reportFile: zap-report.json
+      reportTitle: DAST PR Baseline Scan - Clinic Management App
+      displayReport: false

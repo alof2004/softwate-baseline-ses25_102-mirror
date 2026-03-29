@@ -1,0 +1,176 @@
+name: DAST PR Check
+
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - labeled
+    paths:
+      - "src/**"
+      - "dast/**"
+      - "docker-compose*.yml"
+      - ".github/workflows/dast-pr.yml"
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: dast-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dast-pr:
+    name: DAST PR Baseline Comparison
+    if: contains(github.event.pull_request.labels.*.name, 'run-dast') && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Make DAST scripts executable
+        run: chmod +x dast/scripts/*.sh
+
+      - name: Prepare base branch worktree
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add ../software-base "${BASE_SHA}"
+          chmod +x ../software-base/dast/scripts/*.sh
+
+      - name: Run base branch DAST scan
+        working-directory: ../software-base
+        env:
+          COMPOSE_PROJECT_NAME: clinic-dast-pr-base-${{ github.run_id }}
+          DAST_AUTOMATION_PLAN: automation-plan-pr.yaml
+        run: ./dast/scripts/run-dast-scan.sh
+
+      - name: Collect base branch reports
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/dast/base"
+          cp ../software-base/dast/reports/zap-report.html "$RUNNER_TEMP/dast/base/"
+          cp ../software-base/dast/reports/zap-report.json "$RUNNER_TEMP/dast/base/"
+          cp ../software-base/dast/reports/zap-report.sarif "$RUNNER_TEMP/dast/base/"
+
+      - name: Run PR branch DAST scan
+        env:
+          COMPOSE_PROJECT_NAME: clinic-dast-pr-head-${{ github.run_id }}
+          DAST_AUTOMATION_PLAN: automation-plan-pr.yaml
+        run: ./dast/scripts/run-dast-scan.sh
+
+      - name: Collect PR branch reports
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/dast/head"
+          cp dast/reports/zap-report.html "$RUNNER_TEMP/dast/head/"
+          cp dast/reports/zap-report.json "$RUNNER_TEMP/dast/head/"
+          cp dast/reports/zap-report.sarif "$RUNNER_TEMP/dast/head/"
+
+      - name: Compare DAST reports
+        id: compare
+        continue-on-error: true
+        env:
+          BASE_LABEL: ${{ github.base_ref }} @ ${{ github.event.pull_request.base.sha }}
+          HEAD_LABEL: ${{ github.head_ref }} @ ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/dast/diff"
+          python3 dast/scripts/compare-zap-reports.py \
+            --base "$RUNNER_TEMP/dast/base/zap-report.json" \
+            --head "$RUNNER_TEMP/dast/head/zap-report.json" \
+            --base-label "${BASE_LABEL}" \
+            --head-label "${HEAD_LABEL}" \
+            --markdown "$RUNNER_TEMP/dast/diff/pr-summary.md" \
+            --json "$RUNNER_TEMP/dast/diff/pr-diff.json" \
+            --fail-on-severity High
+
+      - name: Append DAST summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/dast/diff/pr-summary.md" ]; then
+            cat "$RUNNER_TEMP/dast/diff/pr-summary.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## DAST PR Comparison" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Comparison summary was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Comment DAST summary on PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          SUMMARY_FILE: ${{ runner.temp }}/dast/diff/pr-summary.md
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- dast-pr-comparison -->';
+            let body = `${marker}\n## DAST PR Comparison\n\nComparison summary was not generated.`;
+            if (fs.existsSync(process.env.SUMMARY_FILE)) {
+              body = `${marker}\n${fs.readFileSync(process.env.SUMMARY_FILE, 'utf8')}`;
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) =>
+              comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Upload DAST PR artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-pr-comparison-${{ github.event.pull_request.number }}
+          path: |
+            ${{ runner.temp }}/dast/base/zap-report.html
+            ${{ runner.temp }}/dast/base/zap-report.json
+            ${{ runner.temp }}/dast/base/zap-report.sarif
+            ${{ runner.temp }}/dast/head/zap-report.html
+            ${{ runner.temp }}/dast/head/zap-report.json
+            ${{ runner.temp }}/dast/head/zap-report.sarif
+            ${{ runner.temp }}/dast/diff/pr-summary.md
+            ${{ runner.temp }}/dast/diff/pr-diff.json
+          if-no-files-found: warn
+
+      - name: Clean up base worktree
+        if: always()
+        run: git worktree remove ../software-base --force || true
+
+      - name: Enforce DAST PR gate
+        if: steps.compare.outcome == 'failure'
+        run: |
+          echo "New High severity alert types were introduced compared with the base branch." >> "$GITHUB_STEP_SUMMARY"
+          exit 1

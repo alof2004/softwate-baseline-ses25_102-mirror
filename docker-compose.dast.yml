@@ -68,7 +68,7 @@ services:
       - -addoninstall
       - ascanrulesBeta
       - -autorun
-      - /zap/wrk/automation-plan.yaml
+      - ${ZAP_AUTOMATION_PLAN:-/zap/wrk/automation-plan.yaml}
       - -config
       - api.disablekey=true
     user: root

@@ -5,11 +5,29 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/docker-compose.dast.yml"
 PROJECT_NAME="${COMPOSE_PROJECT_NAME:-clinic-dast}"
 REPORTS_DIR="${ROOT_DIR}/dast/reports"
+AUTOMATION_PLAN="${DAST_AUTOMATION_PLAN:-automation-plan.yaml}"
 KEEP_STACK=0
 
-if [ "${1:-}" = "--keep-up" ]; then
-  KEEP_STACK=1
-fi
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --keep-up)
+      KEEP_STACK=1
+      ;;
+    --plan)
+      shift
+      if [ $# -eq 0 ]; then
+        echo "Missing value for --plan" >&2
+        exit 2
+      fi
+      AUTOMATION_PLAN="$1"
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+  shift
+done
 
 cleanup() {
   if [ "${KEEP_STACK}" -eq 0 ]; then
@@ -32,6 +50,7 @@ docker compose -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" up -d --build db backen
 
 echo "Running OWASP ZAP automation plan"
 set +e
+export ZAP_AUTOMATION_PLAN="/zap/wrk/${AUTOMATION_PLAN}"
 docker compose --profile scanner -p "${PROJECT_NAME}" -f "${COMPOSE_FILE}" run --rm zap
 ZAP_EXIT_CODE=$?
 set -e
@@ -48,14 +67,21 @@ import json
 from pathlib import Path
 
 report = json.loads(Path("dast/reports/zap-report.json").read_text())
-alerts = []
-for site in report.get("site", []):
-    alerts.extend(site.get("alerts", []))
-
 counts = {"High": 0, "Medium": 0, "Low": 0, "Informational": 0}
-for alert in alerts:
-    risk = alert.get("risk", "Informational")
-    counts[risk] = counts.get(risk, 0) + 1
+seen_alerts = set()
+for site in report.get("site", []):
+    for alert in site.get("alerts", []):
+        riskdesc = alert.get("riskdesc") or alert.get("risk") or ""
+        severity = riskdesc.split(" ", 1)[0] if riskdesc else "Informational"
+        if severity == "Info":
+            severity = "Informational"
+
+        key = (alert.get("pluginid"), alert.get("name"), severity)
+        if key in seen_alerts:
+            continue
+
+        seen_alerts.add(key)
+        counts[severity] = counts.get(severity, 0) + 1
 
 for level in ("High", "Medium", "Low", "Informational"):
     print(f"{level}: {counts.get(level, 0)}")
