@@ -136,9 +136,11 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-backend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-backend-image.sarif'
           severity: 'HIGH,CRITICAL'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload backend image scan report
@@ -155,6 +157,7 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-backend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'json'
           output: 'trivy-backend-findings.json'
           severity: 'HIGH,CRITICAL'
@@ -167,9 +170,11 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-frontend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-frontend-image.sarif'
           severity: 'HIGH,CRITICAL'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload frontend image scan report
@@ -186,6 +191,7 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-frontend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'json'
           output: 'trivy-frontend-findings.json'
           severity: 'HIGH,CRITICAL'

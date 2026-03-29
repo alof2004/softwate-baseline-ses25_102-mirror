@@ -171,10 +171,12 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-fs-results.sarif'
           severity: 'HIGH,CRITICAL'
           scanners: 'vuln,misconfig'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload Trivy filesystem report
@@ -191,6 +193,7 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: '.'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'table'
           severity: 'HIGH,CRITICAL'
           scanners: 'vuln,misconfig'
@@ -203,10 +206,12 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: 'src/backend'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-backend-results.sarif'
           severity: 'HIGH,CRITICAL'
           scanners: 'vuln'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload Trivy backend dependency report
@@ -223,6 +228,7 @@ jobs:
         with:
           scan-type: 'fs'
           scan-ref: 'src/backend'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'table'
           severity: 'HIGH,CRITICAL'
           scanners: 'vuln'

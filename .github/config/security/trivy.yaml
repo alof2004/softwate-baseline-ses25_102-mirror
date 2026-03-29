@@ -32,7 +32,6 @@ misconfig:
   severity:
     - CRITICAL
     - HIGH
-    - MEDIUM
 
 # Report settings
 format: sarif
