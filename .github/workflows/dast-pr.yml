@@ -46,6 +46,12 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           git worktree add ../software-base "${BASE_SHA}"
+          mkdir -p ../software-base/dast
+          rm -rf ../software-base/dast/scripts ../software-base/dast/zap-config
+          cp -R dast/scripts ../software-base/dast/
+          cp -R dast/zap-config ../software-base/dast/
+          mkdir -p ../software-base/dast/reports
+          cp docker-compose.dast.yml ../software-base/
           chmod +x ../software-base/dast/scripts/*.sh
 
       - name: Run base branch DAST scan
