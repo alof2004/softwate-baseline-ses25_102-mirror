@@ -601,3 +601,211 @@ jobs:
             echo "- Check the SonarQube scan and quality gate step logs for the specific failure."
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
+
+  sast-summary:
+    name: SAST Security Summary
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs: [gitleaks, semgrep, eslint-security, trivy]
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download Gitleaks report
+        if: needs.gitleaks.result == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: gitleaks-pr-report
+          path: reports/
+
+      - name: Download Semgrep report
+        if: needs.semgrep.result == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: semgrep-pr-report
+          path: reports/
+
+      - name: Download Trivy reports
+        if: needs.trivy.result == 'failure'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: trivy-*-report
+          path: reports/
+          merge-multiple: true
+
+      - name: Build SAST security summary
+        id: build_summary
+        shell: bash
+        run: |
+          summary_file="$RUNNER_TEMP/sast-security-summary.md"
+          marker="<!-- sast-security-summary -->"
+
+          # Job results
+          gitleaks_result="${{ needs.gitleaks.result }}"
+          semgrep_result="${{ needs.semgrep.result }}"
+          eslint_result="${{ needs.eslint-security.result }}"
+          trivy_result="${{ needs.trivy.result }}"
+
+          # Status formatting
+          format_status() {
+            case "$1" in
+              success) echo "Passed" ;;
+              failure) echo "**Failed**" ;;
+              skipped) echo "Skipped" ;;
+              cancelled) echo "Cancelled" ;;
+              *) echo "Unknown" ;;
+            esac
+          }
+
+          # Build comment
+          {
+            echo "$marker"
+            echo "## SAST Security Summary"
+            echo ""
+            echo "| Tool | Status |"
+            echo "| --- | --- |"
+            echo "| Gitleaks | $(format_status "$gitleaks_result") |"
+            echo "| Semgrep | $(format_status "$semgrep_result") |"
+            echo "| ESLint Security | $(format_status "$eslint_result") |"
+            echo "| Trivy | $(format_status "$trivy_result") |"
+            echo ""
+          } > "$summary_file"
+
+          # Add Gitleaks findings if failed
+          if [ "$gitleaks_result" = "failure" ] && [ -f "reports/gitleaks-pr.sarif" ]; then
+            echo "### Gitleaks Findings" >> "$summary_file"
+            echo "" >> "$summary_file"
+
+            findings_count=$(jq '[.runs[].results[]] | length' reports/gitleaks-pr.sarif 2>/dev/null || echo "0")
+
+            if [ "$findings_count" -gt 0 ]; then
+              echo "Found **${findings_count}** secret(s):" >> "$summary_file"
+              echo "" >> "$summary_file"
+              jq -r '
+                .runs[].results[]
+                | "- **\(.ruleId // "unknown")** in `\(.locations[0].physicalLocation.artifactLocation.uri // "unknown"):\(.locations[0].physicalLocation.region.startLine // 0)`"
+              ' reports/gitleaks-pr.sarif 2>/dev/null | head -20 >> "$summary_file"
+
+              if [ "$findings_count" -gt 20 ]; then
+                echo "" >> "$summary_file"
+                echo "_Showing first 20 findings. See artifacts for complete report._" >> "$summary_file"
+              fi
+            else
+              echo "No findings details available." >> "$summary_file"
+            fi
+            echo "" >> "$summary_file"
+          fi
+
+          # Add Semgrep findings if failed
+          if [ "$semgrep_result" = "failure" ] && [ -f "reports/semgrep-pr.sarif" ]; then
+            echo "### Semgrep Findings" >> "$summary_file"
+            echo "" >> "$summary_file"
+
+            findings_count=$(jq '[.runs[].results[]] | length' reports/semgrep-pr.sarif 2>/dev/null || echo "0")
+
+            if [ "$findings_count" -gt 0 ]; then
+              echo "Found **${findings_count}** issue(s):" >> "$summary_file"
+              echo "" >> "$summary_file"
+              jq -r '
+                .runs[].results[]
+                | "- **\(.ruleId // "unknown")**: \(.message.text // "no description") in `\(.locations[0].physicalLocation.artifactLocation.uri // "unknown"):\(.locations[0].physicalLocation.region.startLine // 0)`"
+              ' reports/semgrep-pr.sarif 2>/dev/null | head -20 >> "$summary_file"
+
+              if [ "$findings_count" -gt 20 ]; then
+                echo "" >> "$summary_file"
+                echo "_Showing first 20 findings. See artifacts for complete report._" >> "$summary_file"
+              fi
+            else
+              echo "No findings details available." >> "$summary_file"
+            fi
+            echo "" >> "$summary_file"
+          fi
+
+          # Add Trivy findings if failed
+          if [ "$trivy_result" = "failure" ]; then
+            echo "### Trivy Findings" >> "$summary_file"
+            echo "" >> "$summary_file"
+
+            total_vulns=0
+            if [ -f "reports/trivy-fs-results.sarif" ]; then
+              fs_count=$(jq '[.runs[].results[]] | length' reports/trivy-fs-results.sarif 2>/dev/null || echo "0")
+              total_vulns=$((total_vulns + fs_count))
+            fi
+            if [ -f "reports/trivy-backend-results.sarif" ]; then
+              backend_count=$(jq '[.runs[].results[]] | length' reports/trivy-backend-results.sarif 2>/dev/null || echo "0")
+              total_vulns=$((total_vulns + backend_count))
+            fi
+
+            if [ "$total_vulns" -gt 0 ]; then
+              echo "Found **${total_vulns}** vulnerability/vulnerabilities:" >> "$summary_file"
+              echo "" >> "$summary_file"
+
+              # Parse filesystem findings
+              if [ -f "reports/trivy-fs-results.sarif" ]; then
+                jq -r '
+                  .runs[].results[]
+                  | "- **\(.ruleId // "unknown")**: \(.message.text // "no description") (\(.level // "unknown"))"
+                ' reports/trivy-fs-results.sarif 2>/dev/null | head -10 >> "$summary_file"
+              fi
+
+              # Parse backend dependency findings
+              if [ -f "reports/trivy-backend-results.sarif" ]; then
+                jq -r '
+                  .runs[].results[]
+                  | "- **\(.ruleId // "unknown")**: \(.message.text // "no description") (\(.level // "unknown"))"
+                ' reports/trivy-backend-results.sarif 2>/dev/null | head -10 >> "$summary_file"
+              fi
+
+              if [ "$total_vulns" -gt 20 ]; then
+                echo "" >> "$summary_file"
+                echo "_Showing first 20 findings. See artifacts for complete report._" >> "$summary_file"
+              fi
+            else
+              echo "Trivy scan failed but no findings details available." >> "$summary_file"
+            fi
+            echo "" >> "$summary_file"
+          fi
+
+          # Add footer
+          {
+            echo "---"
+            echo ""
+            echo "_This summary is automatically updated on each commit._"
+          } >> "$summary_file"
+
+      - name: Post SAST security summary to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(`${process.env.RUNNER_TEMP}/sast-security-summary.md`, 'utf8');
+            const marker = '<!-- sast-security-summary -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existing = comments.find((comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
