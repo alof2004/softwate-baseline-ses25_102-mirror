@@ -317,6 +317,14 @@ jobs:
             local op="$2"
             local error="$3"
 
+            if curl -sf -u admin:admin --get \
+              --data-urlencode "name=${quality_gate_name}" \
+              "http://localhost:9000/api/qualitygates/show" \
+              | jq -e --arg metric "$metric" '.conditions[]? | select(.metric == $metric)' >/dev/null; then
+              echo "Quality gate condition for ${metric} already exists, continuing..."
+              return 0
+            fi
+
             curl -sf -u admin:admin -X POST \
               --data-urlencode "gateName=${quality_gate_name}" \
               --data-urlencode "metric=${metric}" \
