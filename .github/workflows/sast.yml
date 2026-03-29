@@ -1,6 +1,5 @@
 name: SAST - PR Checks
 
-# Test change to verify enhanced SonarQube reporting
 on:
   pull_request:
     branches:
