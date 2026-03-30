@@ -12,6 +12,13 @@ LEVEL_ORDER = {
     "none": 0,
 }
 
+LEVEL_LABELS = {
+    "error": "Error",
+    "warning": "Warning",
+    "note": "Note",
+    "none": "Note",
+}
+
 
 def safe_text(value, default: str) -> str:
     if value in (None, ""):
@@ -61,6 +68,32 @@ def load_results(report_path: Path):
     return findings
 
 
+def grouped_findings(findings):
+    groups = {}
+    for finding in findings:
+        key = (finding["rule_id"], finding["level"], finding["message"])
+        group = groups.setdefault(
+            key,
+            {
+                "rule_id": finding["rule_id"],
+                "level": finding["level"],
+                "message": finding["message"],
+                "locations": [],
+            },
+        )
+        group["locations"].append(f"`{finding['file']}:{finding['line']}`")
+
+    ordered = sorted(
+        groups.values(),
+        key=lambda finding: (
+            -LEVEL_ORDER.get(finding["level"], -1),
+            finding["rule_id"],
+            finding["locations"][0],
+        ),
+    )
+    return ordered
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         print("usage: render_semgrep_summary.py <title> <sarif_report>", file=sys.stderr)
@@ -69,6 +102,7 @@ def main() -> int:
     title = sys.argv[1]
     report_path = Path(sys.argv[2])
     findings = load_results(report_path)
+    grouped = grouped_findings(findings)
 
     counts = {"error": 0, "warning": 0, "note": 0}
     for finding in findings:
@@ -79,7 +113,10 @@ def main() -> int:
         else:
             counts["note"] += 1
 
+    status = "Passed" if not findings else "Findings Reported"
+
     print(f"### {title}\n")
+    print(f"**Status:** {status}\n")
     print("| Severity | Count |")
     print("| --- | ---: |")
     print(f"| Error | {counts['error']} |")
@@ -88,16 +125,21 @@ def main() -> int:
     print(f"| Total | {len(findings)} |")
 
     if findings:
-        print("\n| Rule | Severity | Location | Message |")
-        print("| --- | --- | --- | --- |")
-        for finding in findings[:20]:
+        print("\n**Top Findings**\n")
+        for finding in grouped[:10]:
+            level = LEVEL_LABELS.get(finding["level"], finding["level"].title())
             print(
-                f"| {finding['rule_id']} | {finding['level'].title()} | "
-                f"`{finding['file']}:{finding['line']}` | {finding['message']} |"
+                f"- **{level}** `{finding['rule_id']}`: {finding['message']}"
             )
+            print(f"  Locations: {', '.join(finding['locations'][:3])}")
+            if len(finding["locations"]) > 3:
+                remaining = len(finding["locations"]) - 3
+                print(f"  Additional matches: {remaining}")
 
-        if len(findings) > 20:
-            print("\n_Showing top 20 findings. See full SARIF artifact for complete results._")
+        if len(grouped) > 10:
+            print(
+                f"\n_Showing the first 10 grouped findings. See the SARIF artifact for the complete result set._"
+            )
     else:
         print("\nNo Semgrep findings were reported.")
 
