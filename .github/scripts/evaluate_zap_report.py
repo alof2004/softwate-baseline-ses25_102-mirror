@@ -94,12 +94,27 @@ def main() -> int:
     parser.add_argument("--summary-file", required=True)
     parser.add_argument("--target-ref", required=True)
     parser.add_argument("--fail-on", default="High")
+    parser.add_argument("--marker", default="")
+    parser.add_argument("--run-url", default="")
     args = parser.parse_args()
 
     report = json.loads(Path(args.report).read_text())
     summary_path = Path(args.summary_file)
     counts, alerts = summarize(report)
     lines = render_summary(counts, alerts, args.target_ref)
+
+    if args.marker:
+        lines.insert(0, args.marker)
+
+    if args.run_url:
+        lines.extend(
+            [
+                "",
+                "### Workflow Links",
+                "",
+                f"- [Open workflow run and artifacts]({args.run_url})",
+            ]
+        )
 
     fail_threshold = SEVERITY_ORDER.get(args.fail_on, SEVERITY_ORDER["High"])
     blocking = [

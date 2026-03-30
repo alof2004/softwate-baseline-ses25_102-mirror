@@ -1,5 +1,3 @@
-# Compatibility copy for existing pre-commit hook installations.
-# The canonical security tooling config lives in .github/config/security/pre-commit.yaml.
 repos:
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
