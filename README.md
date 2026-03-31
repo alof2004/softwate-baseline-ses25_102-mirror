@@ -1,4 +1,4 @@
-# Clinic Project
+# ClinicWave
 
 Full-stack clinic management application with:
 
@@ -126,16 +126,3 @@ pre-commit run --all-files --config .github/config/security/pre-commit.yaml
 ```
 
 The CI and local security tool configs live under `.github/config/security/` to keep the repository root focused on application code and primary project files.
-
-### Backend deep scan
-
-The backend security profile adds SpotBugs with FindSecBugs.
-
-```bash
-cd src/backend
-javac -version
-# Confirm the compiler is JDK 21 before running the security profile.
-./mvnw -Psecurity-sast -DskipTests verify
-```
-
-See [`docs/sast-strategy.md`](docs/sast-strategy.md) for the rationale, blocking thresholds, and triage policy.
