@@ -6,6 +6,12 @@ Full-stack clinic management application with:
 - `src/backend`: Spring Boot backend
 - PostgreSQL database
 
+## Mirror Repository
+
+This repository was mirrored to GitHub for CI and security workflow validation:
+
+- https://github.com/alof2004/softwate-baseline-ses25_102-mirror
+
 ## Quick Start (Docker Compose)
 
 Run everything from the repository root.
