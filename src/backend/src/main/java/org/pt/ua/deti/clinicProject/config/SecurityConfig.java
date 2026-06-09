@@ -40,7 +40,7 @@ public class SecurityConfig {
     @Bean
     public FilterRegistrationBean<RateLimitFilter> rateLimitFilter() {
         var reg = new FilterRegistrationBean<>(new RateLimitFilter());
-        reg.addUrlPatterns("/api/*");
+        reg.addUrlPatterns("/api/*", "/api/*/*");
         reg.setOrder(1);
         reg.setName("rateLimitFilter");
         return reg;
