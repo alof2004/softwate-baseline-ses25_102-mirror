@@ -31,6 +31,10 @@ build/
 ### VS Code ###
 .vscode/
 
+### Python ###
+__pycache__/
+*.pyc
+
 ### React ###
 **/node_modules/
 .vite/
@@ -55,6 +59,7 @@ build/
 **/certbot/
 
 backend.log
+.reports/
 
 dast/reports/*
 !dast/reports/.gitkeep

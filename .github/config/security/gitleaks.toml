@@ -1,0 +1,33 @@
+title = "Project-specific Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Template credentials in the tracked example environment file"
+paths = [
+  '''^\.env\.example$''',
+]
+regexes = [
+  '''POSTGRES_PASSWORD=clinic_pass''',
+]
+
+[[allowlists]]
+description = "Sample user credentials in Keycloak realm export (dev-only, non-production)"
+paths = [
+  '''^keycloak/realm-export\.json$''',
+]
+regexes = [
+  '''Admin1234!''',
+  '''Doctor1234!''',
+  '''Receptionist1234!''',
+]
+
+[[allowlists]]
+description = "Template Keycloak admin credentials in the tracked example environment file"
+paths = [
+  '''^\.env\.example$''',
+]
+regexes = [
+  '''KEYCLOAK_ADMIN_PASSWORD=admin''',
+]

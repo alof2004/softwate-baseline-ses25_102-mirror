@@ -76,7 +76,7 @@ jobs:
             --config p/owasp-top-ten \
             --config p/java \
             --config p/javascript \
-            --config .semgrep.yml \
+            --config .github/config/security/semgrep.yml \
             --severity ERROR \
             --severity WARNING \
             --error \
@@ -93,9 +93,53 @@ jobs:
           name: semgrep-nightly-report
           path: reports/semgrep-nightly.sarif
 
-      - name: Enforce Semgrep nightly gate
-        if: steps.semgrep.outcome == 'failure'
-        run: exit 1
+      - name: Build Semgrep summary and enforce gate
+        if: always()
+        env:
+          SEMGREP_OUTCOME: ${{ steps.semgrep.outcome }}
+        shell: bash
+        run: |
+          summary_status="Passed"
+          if [ "$SEMGREP_OUTCOME" = "failure" ]; then
+            summary_status="Failed"
+          fi
+
+          {
+            echo "## Semgrep Nightly Summary"
+            echo ""
+            echo "| Status |"
+            echo "| --- |"
+            echo "| **${summary_status}** |"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f "reports/semgrep-nightly.sarif" ]; then
+            python3 .github/scripts/render_semgrep_summary.py \
+              "Semgrep Findings" \
+              reports/semgrep-nightly.sarif >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "Semgrep report was not generated."
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "$SEMGREP_OUTCOME" = "failure" ]; then
+            {
+              echo ""
+              echo "---"
+              echo ""
+              echo "**Gate Status:** ❌ Failed"
+              echo ""
+              echo "Review the Semgrep summary above and the uploaded SARIF artifact for full details."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          else
+            {
+              echo ""
+              echo "**Gate Status:** ✅ Passed"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   trivy-images:
     name: Trivy Image Scan
@@ -136,9 +180,11 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-backend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-backend-image.sarif'
           severity: 'HIGH,CRITICAL'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload backend image scan report
@@ -155,6 +201,7 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-backend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'json'
           output: 'trivy-backend-findings.json'
           severity: 'HIGH,CRITICAL'
@@ -167,9 +214,11 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-frontend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'sarif'
           output: 'trivy-frontend-image.sarif'
           severity: 'HIGH,CRITICAL'
+          limit-severities-for-sarif: true
           exit-code: 1
 
       - name: Upload frontend image scan report
@@ -186,6 +235,7 @@ jobs:
         with:
           scan-type: 'image'
           image-ref: 'clinic-frontend:nightly'
+          trivy-config: '.github/config/security/trivy.yaml'
           format: 'json'
           output: 'trivy-frontend-findings.json'
           severity: 'HIGH,CRITICAL'

@@ -1,10 +1,16 @@
-# Clinic Project
+# ClinicWave
 
 Full-stack clinic management application with:
 
 - `src/frontend`: React + Vite frontend
 - `src/backend`: Spring Boot backend
 - PostgreSQL database
+
+## Mirror Repository
+
+This repository was mirrored to GitHub for CI and security workflow validation:
+
+- https://github.com/alof2004/softwate-baseline-ses25_102-mirror
 
 ## Quick Start (Docker Compose)
 
@@ -114,7 +120,7 @@ Install and enable the local hooks:
 
 ```bash
 python3 -m pip install --user pre-commit
-pre-commit install
+pre-commit install --config .github/config/security/pre-commit.yaml
 ```
 
 If your system blocks `pip install --user` with an externally-managed Python environment, create a virtual environment or use `pipx` instead.
@@ -122,18 +128,7 @@ If your system blocks `pip install --user` with an externally-managed Python env
 Run the local SAST hooks against all tracked files:
 
 ```bash
-pre-commit run --all-files
+pre-commit run --all-files --config .github/config/security/pre-commit.yaml
 ```
 
-### Backend deep scan
-
-The backend security profile adds SpotBugs with FindSecBugs.
-
-```bash
-cd src/backend
-javac -version
-# Confirm the compiler is JDK 21 before running the security profile.
-./mvnw -Psecurity-sast -DskipTests verify
-```
-
-See [`docs/sast-strategy.md`](docs/sast-strategy.md) for the rationale, blocking thresholds, and triage policy.
+The CI and local security tool configs live under `.github/config/security/` to keep the repository root focused on application code and primary project files.
