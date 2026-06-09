@@ -1,0 +1,133 @@
+{
+  "id": "clinic",
+  "realm": "clinic",
+  "displayName": "Clinic",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Full administrative access",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "clinic"
+      },
+      {
+        "name": "DOCTOR",
+        "description": "Medical staff — can view and update patient records and appointments",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "clinic"
+      },
+      {
+        "name": "RECEPTIONIST",
+        "description": "Front desk staff — can manage appointments and view patients",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "clinic"
+      }
+    ]
+  },
+
+  "clients": [
+    {
+      "clientId": "clinic-frontend",
+      "name": "Clinic Frontend",
+      "description": "Public OIDC client for the React frontend (Authorization Code + PKCE)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "fullScopeAllowed": true
+    },
+    {
+      "clientId": "clinic-backend",
+      "name": "Clinic Backend",
+      "description": "Bearer-only client for Spring Boot JWT validation",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false
+    }
+  ],
+
+  "users": [
+    {
+      "username": "admin.user",
+      "email": "admin@clinic.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "doctor.user",
+      "email": "doctor@clinic.local",
+      "firstName": "Doctor",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Doctor1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["DOCTOR"]
+    },
+    {
+      "username": "receptionist.user",
+      "email": "receptionist@clinic.local",
+      "firstName": "Receptionist",
+      "lastName": "User",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Receptionist1234!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["RECEPTIONIST"]
+    }
+  ]
+}
