@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.2</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>org.pt.ua.deti</groupId>
@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<postgresql.version>42.7.11</postgresql.version>
 		<jackson-bom.version>3.1.0</jackson-bom.version>
 		<spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
 		<findsecbugs.version>1.13.0</findsecbugs.version>
