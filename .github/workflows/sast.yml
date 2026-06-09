@@ -545,10 +545,18 @@ jobs:
       pull-requests: write
     steps:
       - name: Check out repository
+        id: checkout
+        continue-on-error: true
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: |
+            .github/scripts/upsert_pr_comment.js
+          sparse-checkout-cone-mode: false
 
       - name: Download Gitleaks report
-        if: needs.gitleaks.result == 'failure'
+        if: steps.checkout.outcome == 'success' && needs.gitleaks.result == 'failure'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -556,7 +564,7 @@ jobs:
           path: reports/
 
       - name: Download Semgrep report
-        if: needs.semgrep.result == 'failure'
+        if: steps.checkout.outcome == 'success' && needs.semgrep.result == 'failure'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -564,6 +572,7 @@ jobs:
           path: reports/
 
       - name: Download Semgrep advisory report
+        if: steps.checkout.outcome == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -571,6 +580,7 @@ jobs:
           path: reports/
 
       - name: Download ESLint report
+        if: steps.checkout.outcome == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -578,7 +588,7 @@ jobs:
           path: reports/
 
       - name: Download Trivy filesystem report
-        if: needs.trivy.result == 'failure'
+        if: steps.checkout.outcome == 'success' && needs.trivy.result == 'failure'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -586,7 +596,7 @@ jobs:
           path: reports/
 
       - name: Download Trivy backend report
-        if: needs.trivy.result == 'failure'
+        if: steps.checkout.outcome == 'success' && needs.trivy.result == 'failure'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -594,6 +604,7 @@ jobs:
           path: reports/
 
       - name: Download Trivy advisory reports
+        if: steps.checkout.outcome == 'success'
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
@@ -603,6 +614,7 @@ jobs:
 
       - name: Build SAST security summary
         id: build_summary
+        if: steps.checkout.outcome == 'success'
         env:
           GITLEAKS_RESULT: ${{ needs.gitleaks.result }}
           SEMGREP_RESULT: ${{ needs.semgrep.result }}
@@ -615,6 +627,7 @@ jobs:
           python3 .github/scripts/build_sast_security_summary.py "$summary_file"
 
       - name: Post SAST security summary to PR
+        if: steps.checkout.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
