@@ -1,6 +1,10 @@
 package org.pt.ua.deti.clinicProject.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.pt.ua.deti.clinicProject.dto.PatientRequestDTO;
+import org.pt.ua.deti.clinicProject.dto.PatientResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Patient;
 import org.pt.ua.deti.clinicProject.services.PatientService;
 import org.springframework.http.HttpStatus;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Patients", description = "Manage clinic patients")
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
@@ -23,30 +28,48 @@ public class PatientController {
         this.patientService = patientService;
     }
 
+    @Operation(summary = "List all patients")
     @GetMapping
-    public List<Patient> getAll() {
-        return patientService.getAll();
+    public List<PatientResponseDTO> getAll() {
+        return patientService.getAll().stream().map(PatientResponseDTO::fromEntity).toList();
     }
 
+    @Operation(summary = "Get patient by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Patient> getById(@PathVariable Long id) {
-        return patientService.getById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public ResponseEntity<Patient> create(@RequestBody Patient patient) {
-        Patient created = patientService.create(patient);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Patient> update(@PathVariable Long id, @RequestBody Patient patient) {
-        return patientService
-                .update(id, patient)
+    public ResponseEntity<PatientResponseDTO> getById(@PathVariable Long id) {
+        return patientService.getById(id)
+                .map(PatientResponseDTO::fromEntity)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Create a new patient")
+    @PostMapping
+    public ResponseEntity<PatientResponseDTO> create(@RequestBody PatientRequestDTO dto) {
+        Patient p = new Patient();
+        p.setName(dto.name());
+        p.setDateOfBirth(dto.dateOfBirth());
+        p.setPhoneNumber(dto.phoneNumber());
+        p.setEmail(dto.email());
+        Patient created = patientService.create(p);
+        return ResponseEntity.status(HttpStatus.CREATED).body(PatientResponseDTO.fromEntity(created));
+    }
+
+    @Operation(summary = "Update an existing patient")
+    @PutMapping("/{id}")
+    public ResponseEntity<PatientResponseDTO> update(@PathVariable Long id, @RequestBody PatientRequestDTO dto) {
+        Patient p = new Patient();
+        p.setName(dto.name());
+        p.setDateOfBirth(dto.dateOfBirth());
+        p.setPhoneNumber(dto.phoneNumber());
+        p.setEmail(dto.email());
+        return patientService.update(id, p)
+                .map(PatientResponseDTO::fromEntity)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Operation(summary = "Delete a patient")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (!patientService.delete(id)) {
