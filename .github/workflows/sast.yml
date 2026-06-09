@@ -540,6 +540,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'pull_request'
     needs: [gitleaks, semgrep, eslint-security, trivy]
+    continue-on-error: true
     permissions:
       pull-requests: write
     steps:
