@@ -1,5 +1,6 @@
-import { BsCalendar2WeekFill, BsPeopleFill } from 'react-icons/bs'
+import { BsBoxArrowRight, BsCalendar2WeekFill, BsPeopleFill } from 'react-icons/bs'
 import { NavLink, Outlet } from 'react-router-dom'
+import keycloak from '../auth/keycloak.js'
 import styles from './SidebarLayout.module.css'
 
 const NAV_ITEMS = [
@@ -33,6 +34,19 @@ function SidebarLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className={styles.sidebarFooter}>
+          <span className={styles.username}>{keycloak.tokenParsed?.preferred_username}</span>
+          <button
+            type="button"
+            className={styles.logoutBtn}
+            onClick={() => keycloak.logout({ redirectUri: window.location.origin })}
+            title="Log out"
+          >
+            <BsBoxArrowRight aria-hidden="true" />
+            Log out
+          </button>
+        </div>
       </aside>
 
       <main className={styles.content}>

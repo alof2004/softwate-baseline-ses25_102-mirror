@@ -1,3 +1,4 @@
+import keycloak from '../auth/keycloak.js'
 import styles from '../pages/ClinicDashboardPage.module.css'
 
 function TopNavbar({ onCreatePatient, onCreateAppointment }) {
@@ -30,6 +31,13 @@ function TopNavbar({ onCreatePatient, onCreateAppointment }) {
           onClick={onCreateAppointment}
         >
           New Appointment
+        </button>
+        <button
+          type="button"
+          className={`${styles.btn} ${styles.btnGhost}`}
+          onClick={() => keycloak.logout({ redirectUri: window.location.origin })}
+        >
+          Log out
         </button>
       </div>
     </nav>
