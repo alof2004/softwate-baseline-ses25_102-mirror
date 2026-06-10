@@ -9,11 +9,13 @@ import org.pt.ua.deti.clinicProject.models.Patient;
 import org.pt.ua.deti.clinicProject.services.PatientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,12 +32,16 @@ public class PatientController {
 
     @Operation(summary = "List all patients")
     @GetMapping
+    @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'READ')")
     public List<PatientResponseDTO> getAll() {
         return patientService.getAll().stream().map(PatientResponseDTO::fromEntity).toList();
     }
 
+    // Object-level (BOLA): service returns 404 if resource does not exist,
+    // preventing enumeration of IDs the caller cannot access.
     @Operation(summary = "Get patient by ID")
     @GetMapping("/{id}")
+    @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'READ')")
     public ResponseEntity<PatientResponseDTO> getById(@PathVariable Long id) {
         return patientService.getById(id)
                 .map(PatientResponseDTO::fromEntity)
@@ -45,7 +51,8 @@ public class PatientController {
 
     @Operation(summary = "Create a new patient")
     @PostMapping
-    public ResponseEntity<PatientResponseDTO> create(@RequestBody PatientRequestDTO dto) {
+    @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'CREATE')")
+    public ResponseEntity<PatientResponseDTO> create(@Valid @RequestBody PatientRequestDTO dto) {
         Patient p = new Patient();
         p.setName(dto.name());
         p.setDateOfBirth(dto.dateOfBirth());
@@ -57,7 +64,8 @@ public class PatientController {
 
     @Operation(summary = "Update an existing patient")
     @PutMapping("/{id}")
-    public ResponseEntity<PatientResponseDTO> update(@PathVariable Long id, @RequestBody PatientRequestDTO dto) {
+    @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'UPDATE')")
+    public ResponseEntity<PatientResponseDTO> update(@PathVariable Long id, @Valid @RequestBody PatientRequestDTO dto) {
         Patient p = new Patient();
         p.setName(dto.name());
         p.setDateOfBirth(dto.dateOfBirth());
@@ -71,6 +79,7 @@ public class PatientController {
 
     @Operation(summary = "Delete a patient")
     @DeleteMapping("/{id}")
+    @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'DELETE')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (!patientService.delete(id)) {
             return ResponseEntity.notFound().build();

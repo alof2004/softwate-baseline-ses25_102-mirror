@@ -12,6 +12,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +36,7 @@ public class AppointmentController {
 
     @Operation(summary = "List all appointments, optionally filtered")
     @GetMapping
+    @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'READ')")
     public List<AppointmentResponseDTO> getAll(
             @RequestParam(required = false) String patientName,
             @RequestParam(required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate date,
@@ -45,8 +48,10 @@ public class AppointmentController {
         return results.stream().map(AppointmentResponseDTO::fromEntity).toList();
     }
 
+    // Object-level (BOLA): service returns 404 if the appointment ID does not exist.
     @Operation(summary = "Get appointment by ID")
     @GetMapping("/{id}")
+    @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'READ')")
     public ResponseEntity<AppointmentResponseDTO> getById(@PathVariable Long id) {
         return appointmentService.getById(id)
                 .map(AppointmentResponseDTO::fromEntity)
@@ -56,8 +61,9 @@ public class AppointmentController {
 
     @Operation(summary = "Create a new appointment for a patient")
     @PostMapping
+    @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'CREATE')")
     public ResponseEntity<AppointmentResponseDTO> create(
-            @RequestParam Long patientId, @RequestBody AppointmentRequestDTO dto) {
+            @RequestParam Long patientId, @Valid @RequestBody AppointmentRequestDTO dto) {
         Appointment a = new Appointment();
         a.setDateTime(dto.dateTime());
         a.setSpecialty(dto.specialty());
@@ -70,8 +76,9 @@ public class AppointmentController {
 
     @Operation(summary = "Update an existing appointment")
     @PutMapping("/{id}")
+    @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'UPDATE')")
     public ResponseEntity<AppointmentResponseDTO> update(
-            @PathVariable Long id, @RequestBody AppointmentRequestDTO dto) {
+            @PathVariable Long id, @Valid @RequestBody AppointmentRequestDTO dto) {
         Appointment a = new Appointment();
         a.setDateTime(dto.dateTime());
         a.setSpecialty(dto.specialty());
@@ -84,6 +91,7 @@ public class AppointmentController {
 
     @Operation(summary = "Delete an appointment")
     @DeleteMapping("/{id}")
+    @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'DELETE')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         if (!appointmentService.delete(id)) {
             return ResponseEntity.notFound().build();
