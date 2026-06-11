@@ -1,6 +1,4 @@
 # Rate limiting zone — 30 req/s per IP, burst 60
-# The app-layer Bucket4j limit (100 req/min ≈ 1.67 req/s) is intentionally
-# looser — the perimeter catches bulk floods first.
 limit_req_zone  ${binary_remote_addr} zone=api_limit:10m rate=30r/s;
 limit_req_status 429;
 
@@ -25,16 +23,9 @@ server {
     ssl_session_timeout       1d;
     ssl_session_tickets       off;
 
-    # Request size limit
     client_max_body_size  ${CLIENT_MAX_BODY_SIZE};
     client_body_timeout   10s;
     client_header_timeout 10s;
-
-    # Security headers (complement Spring Security headers on the backend)
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Content-Type-Options    "nosniff"                             always;
-    add_header X-Frame-Options           "DENY"                                always;
-    add_header Referrer-Policy           "strict-origin-when-cross-origin"     always;
 
     # /api/** → Spring Boot backend (rate limited)
     location /api/ {
@@ -61,6 +52,15 @@ server {
         proxy_set_header   X-Real-IP         ${remote_addr};
         proxy_set_header   X-Forwarded-For   ${proxy_add_x_forwarded_for};
         proxy_set_header   X-Forwarded-Proto ${scheme};
+    }
+
+    # For all other locations, add the security headers directly in Nginx
+    location / {
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Content-Type-Options    "nosniff"                             always;
+        add_header X-Frame-Options           "DENY"                                always;
+        add_header Referrer-Policy           "strict-origin-when-cross-origin"     always;
+        return 404;
     }
 
     include includes/location_common.conf;

@@ -71,6 +71,7 @@ services:
       NGINX_ALWAYS_TLS_REDIRECT: "off"
       METRICS_ALLOW_FROM: "127.0.0.1"
       METRICS_DENY_FROM: "all"
+      ALLOWED_METHODS: "GET HEAD POST PUT DELETE OPTIONS"
     volumes:
       - ./certs/localhost+1.pem:/etc/nginx/conf/server.crt:ro
       - ./certs/localhost+1-key.pem:/etc/nginx/conf/server.key:ro

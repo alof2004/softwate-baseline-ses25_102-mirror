@@ -68,14 +68,14 @@ jobs:
 
       - name: Build and start frontend
         run: |
-          docker build -t clinic-frontend:dast ./src/frontend
+          docker build -t clinic-frontend:dast \
+            --build-arg VITE_API_BASE_URL=http://localhost:18080/api \
+            --build-arg VITE_KEYCLOAK_URL=http://localhost:8180 \
+            ./src/frontend
           docker run -d \
             --name frontend \
             --network dast-network \
-            -p 15173:5173 \
-            -e VITE_API_BASE_URL=/api \
-            -e VITE_PROXY_TARGET=http://backend:8080 \
-            -e VITE_KEYCLOAK_URL=http://localhost:8180 \
+            -p 15173:8080 \
             clinic-frontend:dast
 
       - name: Wait for application to be ready
@@ -121,7 +121,7 @@ jobs:
             -v "$PWD/dast/reports:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
-            -t "http://frontend:5173" \
+            -t "http://frontend:8080" \
             -a \
             -j \
             -I \
@@ -256,26 +256,53 @@ jobs:
             sleep 3
           done
 
+      - name: Generate self-signed cert for WAF (DAST only)
+        run: |
+          mkdir -p certs
+          openssl req -x509 -nodes -days 365 \
+            -subj "/C=PT/ST=Aveiro/O=ClinicLab/CN=localhost" \
+            -newkey rsa:2048 \
+            -keyout certs/localhost+1-key.pem \
+            -out    certs/localhost+1.pem
+          chmod o+r certs/localhost+1-key.pem
+
       - name: Build and start WAF
         run: |
           docker build -t clinic-waf:dast ./waf
           docker run -d \
             --name waf \
             --network dast-waf-network \
-            -p 18081:80 \
-            -p 18443:443 \
+            -p 18081:8080 \
+            -p 18443:8443 \
+            -v "$PWD/certs/localhost+1.pem:/etc/nginx/conf/server.crt:ro" \
+            -v "$PWD/certs/localhost+1-key.pem:/etc/nginx/conf/server.key:ro" \
+            -e BACKEND=http://backend:8080 \
+            -e PORT=8080 \
+            -e SSL_PORT=8443 \
+            -e SSL_CERT_FILE=/etc/nginx/conf/server.crt \
+            -e SSL_CERT_KEY_FILE=/etc/nginx/conf/server.key \
+            -e SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+            -e SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256" \
+            -e SSL_PREFER_CIPHERS=off \
+            -e SSL_OCSP_STAPLING=off \
+            -e CLIENT_MAX_BODY_SIZE=1m \
+            -e SERVER_NAME=localhost \
+            -e NGINX_ALWAYS_TLS_REDIRECT=off \
+            -e METRICS_ALLOW_FROM=127.0.0.1 \
+            -e METRICS_DENY_FROM=all \
+            -e ALLOWED_METHODS="GET HEAD POST PUT DELETE OPTIONS" \
             clinic-waf:dast
 
-      - name: Build and start frontend (proxying via WAF)
+      - name: Build and start frontend (pointing at WAF)
         run: |
-          docker build -t clinic-frontend:dast-waf ./src/frontend
+          docker build -t clinic-frontend:dast-waf \
+            --build-arg VITE_API_BASE_URL=http://localhost:18081/api \
+            --build-arg VITE_KEYCLOAK_URL=http://localhost:8180 \
+            ./src/frontend
           docker run -d \
             --name frontend-waf \
             --network dast-waf-network \
-            -p 15174:5173 \
-            -e VITE_API_BASE_URL=/api \
-            -e VITE_PROXY_TARGET=http://waf:80 \
-            -e VITE_KEYCLOAK_URL=http://localhost:8180 \
+            -p 15174:8080 \
             clinic-frontend:dast-waf
 
       - name: Wait for WAF + frontend to be ready
@@ -320,7 +347,7 @@ jobs:
             -v "$PWD/dast/reports:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
-            -t "http://frontend-waf:5173" \
+            -t "http://frontend-waf:8080" \
             -a \
             -j \
             -I \
