@@ -62,10 +62,14 @@
 \contentsline {subsection}{\numberline {4.2.4}Role-Based UI}{43}{subsection.4.2.4}%
 \contentsline {subsection}{\numberline {4.2.5}Unit Tests}{43}{subsection.4.2.5}%
 \contentsline {section}{\numberline {4.3}API Hardening -- OWASP API Top 10 (2023)}{43}{section.4.3}%
-\contentsline {section}{\numberline {4.4}Zero Trust Architecture Framing}{45}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}NIST SP 800-207 Components}{45}{subsection.4.4.1}%
-\contentsline {subsection}{\numberline {4.4.2}NIST SP 800-207 \S 2.1 -- Seven Tenets Mapping}{45}{subsection.4.4.2}%
-\contentsline {section}{\numberline {4.5}Abuse Story Regression}{47}{section.4.5}%
-\contentsline {subsection}{\numberline {4.5.1}Regression Evidence}{48}{subsection.4.5.1}%
-\contentsline {subsection}{\numberline {4.5.2}Regression Summary}{55}{subsection.4.5.2}%
-\contentsline {section}{\numberline {4.6}Future Work}{55}{section.4.6}%
+\contentsline {section}{\numberline {4.4}Perimeter Defense}{45}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Nginx + ModSecurity CRS}{45}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}CRS Tuning and False Positives}{45}{subsection.4.4.2}%
+\contentsline {section}{\numberline {4.5}Zero Trust Architecture Framing}{46}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}NIST SP 800-207 Components}{46}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}NIST SP 800-207 \S 2.1 -- Seven Tenets Mapping}{46}{subsection.4.5.2}%
+\contentsline {section}{\numberline {4.6}Abuse Story Regression}{48}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Regression Evidence}{50}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Regression Summary}{57}{subsection.4.6.2}%
+\contentsline {section}{\numberline {4.7}Future Work}{58}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Conclusion}{58}{section.4.8}%
