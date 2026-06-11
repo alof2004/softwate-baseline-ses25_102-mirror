@@ -8,6 +8,7 @@ import org.pt.ua.deti.clinicProject.dto.AppointmentRequestDTO;
 import org.pt.ua.deti.clinicProject.dto.AppointmentResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Appointment;
 import org.pt.ua.deti.clinicProject.services.AppointmentService;
+import org.pt.ua.deti.clinicProject.services.AuditLogService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/appointments")
 public class AppointmentController {
     private final AppointmentService appointmentService;
+    private final AuditLogService auditLogService;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(
+            AppointmentService appointmentService, AuditLogService auditLogService) {
         this.appointmentService = appointmentService;
+        this.auditLogService = auditLogService;
     }
 
     @Operation(summary = "List all appointments, optionally filtered")
@@ -69,8 +73,10 @@ public class AppointmentController {
         a.setSpecialty(dto.specialty());
         a.setStatus(dto.status());
         return appointmentService.create(patientId, a)
-                .map(AppointmentResponseDTO::fromEntity)
-                .map(created -> ResponseEntity.status(HttpStatus.CREATED).body(created))
+                .map(created -> {
+                    auditLogService.log("CREATE", "appointments", String.valueOf(created.getId()));
+                    return ResponseEntity.status(HttpStatus.CREATED).body(AppointmentResponseDTO.fromEntity(created));
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -84,8 +90,10 @@ public class AppointmentController {
         a.setSpecialty(dto.specialty());
         a.setStatus(dto.status());
         return appointmentService.update(id, a)
-                .map(AppointmentResponseDTO::fromEntity)
-                .map(ResponseEntity::ok)
+                .map(updated -> {
+                    auditLogService.log("UPDATE", "appointments", String.valueOf(id));
+                    return ResponseEntity.ok(AppointmentResponseDTO.fromEntity(updated));
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -96,6 +104,7 @@ public class AppointmentController {
         if (!appointmentService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
+        auditLogService.log("DELETE", "appointments", String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
 }

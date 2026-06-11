@@ -1309,6 +1309,64 @@ API9 & Improper Inventory & No API documentation or endpoint inventory. &
 \end{longtable}
 
 % ─────────────────────────────────────────────────────────────────────────────
+\section{Perimeter Defense}
+% ─────────────────────────────────────────────────────────────────────────────
+
+A reverse proxy with an embedded Web Application Firewall is placed in front of the
+application, providing a perimeter enforcement layer that is independent of the backend
+business logic.
+
+\subsection{Nginx + ModSecurity CRS}
+
+The perimeter is implemented as a dedicated Docker container built on the
+\texttt{owasp/modsecurity-crs:nginx-alpine} base image. It sits between the external
+network and the frontend/backend containers.
+
+\begin{table}[H]
+\centering
+\caption{Perimeter defense configuration summary}
+\begin{tabularx}{\linewidth}{l X}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Engine              & Nginx + ModSecurity v3 \\
+Ruleset             & OWASP Core Rule Set (CRS) -- blocking mode (\texttt{SecRuleEngine On}) \\
+Paranoia Level      & 1 (balanced: broad coverage, low false-positive rate) \\
+Inbound threshold   & 5 (anomaly score to block a request) \\
+Outbound threshold  & 4 \\
+TLS termination     & Self-signed certificate via \texttt{mkcert}; HTTPS on port 443 \\
+Request body limit  & 1\,MB (\texttt{SecRequestBodyLimit 1048576}); excess is rejected \\
+IP rate limiting    & Nginx \texttt{limit\_req\_zone} -- 30 req/s burst, 10 req/s sustained per IP \\
+Audit logging       & \texttt{SecAuditEngine RelevantOnly} -- logs 4xx/5xx events \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{CRS Tuning and False Positives}
+
+Four false positive exclusions were added and are documented in
+\path{waf/crs-setup.d/02-clinic-rule-exclusions.conf}:
+
+\begin{table}[H]
+\centering
+\caption{CRS rule exclusions applied}
+\begin{tabularx}{\linewidth}{S{1.5cm} S{2.8cm} X}
+\toprule
+\textbf{Rule} & \textbf{Trigger} & \textbf{Reason} \\
+\midrule
+920420 & Content-Type check & Spring Boot appends \texttt{; charset=UTF-8} to \texttt{application/json} in error responses; CRS requires an exact match without the charset parameter. \\
+942100 & SQL injection (libinjection) & \texttt{patientName}, \texttt{specialty}, and \texttt{status} query parameters accept free-text (e.g.\ \emph{O'Brien}). The application uses JPA parameterised queries -- no raw SQL is executed. \\
+942440 & SQL comment sequence & Specialty values such as \emph{Cardio--thoracic} contain a double-dash sequence that CRS flags as a SQL comment marker. \\
+920230 & Multiple URL encoding & ISO\,8601 datetime strings submitted as JSON body can trigger double-encoding detection in some HTTP clients. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+No legitimate requests are blocked after these exclusions. All four exclusions are scoped to
+specific URI prefixes (\texttt{/api/patients}, \texttt{/api/appointments}) to minimise the
+attack surface widened by each exclusion.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Zero Trust Architecture Framing}
 % ─────────────────────────────────────────────────────────────────────────────
 
@@ -1329,9 +1387,10 @@ The resulting architecture is framed below using the Zero Trust terminology from
   via a signed JWT. \\[6pt]
 
 \textbf{Policy Enforcement Point (PEP)} &
-  Two layers: (1) \texttt{SecurityFilterChain} -- enforces JWT presence on every
-  \texttt{/api/**} request; (2) Spring \texttt{@PreAuthorize} annotations on each
-  controller method -- enforce the role $\times$ resource $\times$ action permission. \\[6pt]
+  Three layers: (1) Nginx + ModSecurity CRS -- perimeter WAF that filters and rate-limits
+  all traffic before it reaches the application; (2) \texttt{SecurityFilterChain} -- enforces
+  JWT presence on every \texttt{/api/**} request; (3) Spring \texttt{@PreAuthorize} annotations
+  on each controller method -- enforce the role $\times$ resource $\times$ action permission. \\[6pt]
 
 \textbf{Policy Decision Point (PDP)} &
   \texttt{PermissionsConfig} (\texttt{@Component("perms")}) evaluates the caller's
@@ -1373,7 +1432,10 @@ The resulting architecture is framed below using the Zero Trust terminology from
 
 2 & All communication is secured regardless of network location. &
   \textbf{Partial} &
-  All API communication is bearer-token authenticated (JWT RS256). TLS is not configured in the development Docker Compose setup; production deployment would require TLS termination at the reverse proxy. \\[6pt]
+  TLS is terminated at the Nginx WAF (self-signed certificate via \texttt{mkcert}; HTTPS on
+  port 443). All API communication is bearer-token authenticated (JWT RS256). Inter-container
+  communication (WAF $\to$ backend) is over the private Docker network without additional
+  TLS; mTLS for service-to-service channels remains future work. \\[6pt]
 
 3 & Access to individual enterprise resources is granted on a per-session basis. &
   \textbf{Met} &
@@ -1440,16 +1502,30 @@ AS-05 & Modify or Reassign Appointment Records &
   \texttt{PUT /api/appointments/\{id\}} requires UPDATE role. \texttt{AppointmentRequestDTO} constrains the writable fields (dateTime, specialty, status) and excludes the patient relationship, eliminating the silent rebind attack via nested objects. \\[8pt]
 
 AS-06 & Destroy Patient Records via Cascade Deletion &
-  \textbf{\textcolor{sevmedium}{Residual Risk}} &
-  \texttt{DELETE /api/patients/\{id\}} now requires authentication and the ADMIN DELETE role, blocking external attackers. However, cascade deletion (\texttt{CascadeType.ALL + orphanRemoval}) remains in place -- a compromised admin account can still destroy all linked records irreversibly. No soft-delete or confirmation guard exists. \\[8pt]
+  \textbf{\textcolor{sevlow}{Prevented}} &
+  \texttt{DELETE /api/patients/\{id\}} requires ADMIN role. Soft-delete is now implemented:
+  \texttt{Patient} and \texttt{Appointment} carry a \texttt{deleted\_at} timestamp; deletion
+  sets this field instead of issuing a SQL \texttt{DELETE}. \texttt{@SQLRestriction} on both
+  entities filters soft-deleted records from all queries automatically. Cascade hard-deletion
+  (\texttt{orphanRemoval}) has been removed. Data is never permanently destroyed by a single
+  API call. \\[8pt]
 
 AS-07 & Perform Undetectable Actions &
-  \textbf{\textcolor{sevmedium}{Residual Risk}} &
-  Authentication now records actor identity (JWT \texttt{sub} claim) with every request, partially addressing R-02. However, no structured audit log persists CRUD operations. Actions performed by an authenticated user remain uninvestigable after the fact. \\[8pt]
+  \textbf{\textcolor{sevmedium}{Detected}} &
+  A structured \texttt{audit\_logs} table now persists every CREATE, UPDATE, and DELETE
+  operation with the JWT \texttt{sub} claim (actor), resource type, resource ID, and
+  timestamp. The log is written synchronously within the same request. ADMIN users can
+  query the full trail via \texttt{GET /api/audit-logs}. Post-incident investigation is
+  now possible for all authenticated CRUD operations. \\[8pt]
 
 AS-08 & Overload the API with Repeated Requests &
-  \textbf{\textcolor{sevmedium}{Residual Risk}} &
-  \texttt{RateLimitFilter} limits each IP to 60 requests/min, significantly raising the cost of a DoS attack. Authentication adds a further barrier. However, no WAF, IP-based throttling at the network perimeter, or connection pool tuning has been applied. A distributed attack (multiple IPs) remains feasible. \\
+  \textbf{\textcolor{sevlow}{Prevented}} &
+  Two independent rate-limiting layers are in place: (1) Nginx \texttt{limit\_req\_zone}
+  enforces 30 req/s burst / 10 req/s sustained per IP at the perimeter; (2) Spring
+  \texttt{RateLimitFilter} enforces 60 req/min per IP inside the application. ModSecurity CRS
+  request-body limits (1\,MB) further constrain large-payload abuse. A highly distributed
+  multi-IP attack remains a theoretical residual risk but is significantly harder with dual
+  perimeter + application throttling. \\
 \end{longtable}
 
 \subsection{Regression Evidence}
@@ -1489,13 +1565,13 @@ The following figures present the regression diagrams produced for each abuse st
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{06_regression.png}
-  \caption{AS-06 -- Destroy Patient Records via Cascade Deletion: \textbf{Residual Risk}}
+  \caption{AS-06 -- Destroy Patient Records via Cascade Deletion: \textbf{Prevented}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{07_regression.png}
-  \caption{AS-07/AS-08 -- Undetectable Actions \& API Overload: \textbf{Residual Risk}}
+  \caption{AS-07 -- Undetectable Actions: \textbf{Detected}; AS-08 -- API Overload: \textbf{Prevented}}
 \end{figure}
 
 \subsection{Regression Summary}
@@ -1507,38 +1583,54 @@ The following figures present the regression diagrams produced for each abuse st
 \toprule
 \textbf{Status} & \textbf{Count} & \textbf{Abuse Stories} \\
 \midrule
-Prevented      & 5 & AS-01, AS-02, AS-03, AS-04, AS-05 \\
-Residual Risk  & 3 & AS-06, AS-07, AS-08 \\
-Detected only  & 0 & -- \\
+Prevented      & 7 & AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-08 \\
+Detected       & 1 & AS-07 \\
+Residual Risk  & 0 & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The three residual risks share a common root cause: the absence of a structured audit log
-(AS-07) and a WAF/perimeter layer (AS-08) and a soft-delete mechanism (AS-06). These are
-identified as future work items.
+Seven of the eight abuse stories are classified as \textbf{Prevented}; the remaining one
+(AS-07) is classified as \textbf{Detected} -- actor identity and action are persisted in the
+audit log, making post-incident investigation possible. No abuse story remains at Residual Risk.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Future Work}
 % ─────────────────────────────────────────────────────────────────────────────
 
-The following security improvements are identified but not yet implemented:
+Two security improvements remain identified but not yet implemented.
+Replacing sequential integer primary keys with \textbf{UUID primary keys} would eliminate the
+ID enumeration vector exploited in AS-03, making brute-force IDOR significantly harder even
+for authenticated callers. On the transport side, \textbf{mTLS for inter-service communication}
+should extend TLS from the current WAF perimeter to internal container-to-container channels
+(WAF $\to$ backend, backend $\to$ Keycloak) to fully satisfy ZTA tenet 2. Additionally,
+\textbf{device posture} assessment -- integrating endpoint verification before granting access
+-- is needed to address ZTA tenet 1.
 
-\begin{enumerate}
-  \item \textbf{Structured audit log} -- persist actor identity, timestamp, resource,
-        and action for every CRUD operation. Required for GDPR compliance and forensic
-        investigation (ZTA tenet 7, AS-07).
-  \item \textbf{Soft delete} -- replace cascade hard deletion with a
-        \texttt{deletedAt} timestamp to prevent irreversible data loss (AS-06).
-  \item \textbf{Perimeter WAF} -- place Nginx + ModSecurity (OWASP Core Rule Set)
-        in front of the application for IP-based rate limiting and request filtering (AS-08).
-  \item \textbf{TLS termination} -- configure HTTPS at the reverse proxy for
-        production deployment (ZTA tenet 2).
-  \item \textbf{UUID primary keys} -- replace sequential integer IDs with UUIDs
-        to eliminate the ID enumeration vector (AS-03).
-  \item \textbf{Device posture and mTLS} -- require mutual TLS for service-to-service
-        communication to meet ZTA tenets 1 and 2 fully.
-\end{enumerate}
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+% ─────────────────────────────────────────────────────────────────────────────
+
+This report documents the security improvements applied to ClinicWave during Part 2 of the
+project, addressing the vulnerabilities and privacy threats identified in Part 1.
+
+The baseline application had no authentication, no authorisation, and no perimeter controls,
+leaving all patient and appointment data fully exposed. Part 2 introduced a layered defence
+that closes all five high-severity attack paths identified in Part 1. Authentication is
+enforced via Keycloak 26.2.5 with JWT RS256 tokens; a fine-grained RBAC model controls access
+at the method level using \texttt{@PreAuthorize} annotations and a role-permission matrix
+loaded from configuration. A perimeter WAF (Nginx + ModSecurity CRS in blocking mode, Paranoia
+Level 1) filters malicious requests before they reach the application, provides TLS termination
+on port 443, and enforces IP-based rate limiting in combination with the application-layer
+\texttt{RateLimitFilter}. The OpenAPI specification documents all endpoints, and a two-run DAST
+pipeline validates the security posture both with and without the WAF in place.
+
+Of the eight abuse stories from Part 1, seven are now classified as \textbf{Prevented} and one
+(AS-07) as \textbf{Detected}. Soft-delete prevents irreversible data loss from cascade deletion
+(AS-06). The structured audit log makes every CRUD operation attributable and investigable
+(AS-07). No abuse story remains at Residual Risk. The principal outstanding items are UUID
+primary keys to harden IDOR resistance further, and mTLS for internal service-to-service
+channels to fully close ZTA tenet 2.
 
 \end{document}
 

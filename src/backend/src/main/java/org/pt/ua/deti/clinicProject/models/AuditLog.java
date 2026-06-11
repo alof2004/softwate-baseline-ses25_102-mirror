@@ -1,45 +1,38 @@
 package org.pt.ua.deti.clinicProject.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLRestriction;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "appointments")
-@SQLRestriction("deleted_at IS NULL")
-public class Appointment {
+@Table(name = "audit_logs")
+public class AuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private LocalDateTime dateTime;
+    private String actor;
 
     @Column(nullable = false)
-    private String specialty;
+    private String action;
 
     @Column(nullable = false)
-    private String status;
+    private String resource;
 
-    @Column
-    private LocalDateTime deletedAt;
+    @Column(nullable = false)
+    private String resourceId;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "patient_id", nullable = false)
-    @JsonBackReference
-    private Patient patient;
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
 }

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  11 JUN 2026 14:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  11 JUN 2026 21:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -603,7 +603,7 @@ File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: End \AtBeginDocument code.
-<report_images/uni.png, id=269, 545.03625pt x 225.84375pt>
+<report_images/uni.png, id=285, 545.03625pt x 225.84375pt>
 File: report_images/uni.png Graphic file (type png)
 <use report_images/uni.png>
 Package pdftex.def Info: report_images/uni.png  used on input line 94.
@@ -638,7 +638,7 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <8> on input line 95.
 LaTeX Font Info:    External font `lmex10' loaded for size
 (Font)              <6> on input line 95.
-<report_images/deti.png, id=271, 681.54625pt x 343.2825pt>
+<report_images/deti.png, id=287, 681.54625pt x 343.2825pt>
 File: report_images/deti.png Graphic file (type png)
 <use report_images/deti.png>
 Package pdftex.def Info: report_images/deti.png  used on input line 99.
@@ -695,7 +695,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 
 
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}]
-<report_images/assets.png, id=366, 282.05376pt x 893.3375pt>
+<report_images/assets.png, id=386, 282.05376pt x 893.3375pt>
 File: report_images/assets.png Graphic file (type png)
 <use report_images/assets.png>
 Package pdftex.def Info: report_images/assets.png  used on input line 200.
@@ -719,12 +719,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [5 <./report_images/assets.png>]
-<report_images/DFD0.png, id=378, 1214.5375pt x 316.18124pt>
+<report_images/DFD0.png, id=398, 1214.5375pt x 316.18124pt>
 File: report_images/DFD0.png Graphic file (type png)
 <use report_images/DFD0.png>
 Package pdftex.def Info: report_images/DFD0.png  used on input line 224.
 (pdftex.def)             Requested size: 328.6292pt x 85.54858pt.
-<report_images/DFD1.png, id=379, 1567.8575pt x 371.3875pt>
+<report_images/DFD1.png, id=399, 1567.8575pt x 371.3875pt>
 File: report_images/DFD1.png Graphic file (type png)
 <use report_images/DFD1.png>
 Package pdftex.def Info: report_images/DFD1.png  used on input line 239.
@@ -739,12 +739,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [6 <./report_images/DFD0.png> <./report_images/DFD1.png>]
-<report_images/DFD2.png, id=391, 733.74126pt x 730.73pt>
+<report_images/DFD2.png, id=411, 733.74126pt x 730.73pt>
 File: report_images/DFD2.png Graphic file (type png)
 <use report_images/DFD2.png>
 Package pdftex.def Info: report_images/DFD2.png  used on input line 258.
 (pdftex.def)             Requested size: 328.6292pt x 327.28676pt.
-<report_images/FLOW2.png, id=392, 1004.75375pt x 624.3325pt>
+<report_images/FLOW2.png, id=412, 1004.75375pt x 624.3325pt>
 File: report_images/FLOW2.png Graphic file (type png)
 <use report_images/FLOW2.png>
 Package pdftex.def Info: report_images/FLOW2.png  used on input line 264.
@@ -887,7 +887,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [16]
-<images/01_unauthorized-data-access.png, id=456, 2107.875pt x 1165.35374pt>
+<images/01_unauthorized-data-access.png, id=477, 2107.875pt x 1165.35374pt>
 File: images/01_unauthorized-data-access.png Graphic file (type png)
 <use images/01_unauthorized-data-access.png>
 Package pdftex.def Info: images/01_unauthorized-data-access.png  used on input 
@@ -903,13 +903,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [17 <./images/01_unauthorized-data-access.png (PNG copy)>]
-<images/02_linking-and-inference.png, id=464, 2107.875pt x 1217.2978pt>
+<images/02_linking-and-inference.png, id=484, 2107.875pt x 1217.2978pt>
 File: images/02_linking-and-inference.png Graphic file (type png)
 <use images/02_linking-and-inference.png>
 Package pdftex.def Info: images/02_linking-and-inference.png  used on input lin
 e 549.
 (pdftex.def)             Requested size: 403.11768pt x 232.79352pt.
-<images/03_patient-enumeration.png, id=465, 2107.875pt x 1317.42188pt>
+<images/03_patient-enumeration.png, id=485, 2107.875pt x 1317.42188pt>
 File: images/03_patient-enumeration.png Graphic file (type png)
 <use images/03_patient-enumeration.png>
 Package pdftex.def Info: images/03_patient-enumeration.png  used on input line 
@@ -925,7 +925,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [18 <./images/02_linking-and-inference.png (PNG copy)>]
-<images/04_record-tampering.png, id=474, 2107.875pt x 960.58875pt>
+<images/04_record-tampering.png, id=494, 2107.875pt x 960.58875pt>
 File: images/04_record-tampering.png Graphic file (type png)
 <use images/04_record-tampering.png>
 Package pdftex.def Info: images/04_record-tampering.png  used on input line 595
@@ -942,13 +942,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 
 [19 <./images/03_patient-enumeration.png (PNG copy)> <./images/04_record-tamper
 ing.png (PNG copy)>]
-<images/05_cascade-deletion.png, id=482, 2107.875pt x 1312.905pt>
+<images/05_cascade-deletion.png, id=502, 2107.875pt x 1312.905pt>
 File: images/05_cascade-deletion.png Graphic file (type png)
 <use images/05_cascade-deletion.png>
 Package pdftex.def Info: images/05_cascade-deletion.png  used on input line 618
 .
 (pdftex.def)             Requested size: 438.17227pt x 272.91353pt.
-<images/06_undetectable-actions.png, id=483, 2107.875pt x 1206.75844pt>
+<images/06_undetectable-actions.png, id=503, 2107.875pt x 1206.75844pt>
 File: images/06_undetectable-actions.png Graphic file (type png)
 <use images/06_undetectable-actions.png>
 Package pdftex.def Info: images/06_undetectable-actions.png  used on input line
@@ -964,7 +964,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [20 <./images/05_cascade-deletion.png (PNG copy)>]
-<images/07_api-overload.png, id=491, 2107.875pt x 1249.66875pt>
+<images/07_api-overload.png, id=511, 2107.875pt x 1249.66875pt>
 File: images/07_api-overload.png Graphic file (type png)
 <use images/07_api-overload.png>
 Package pdftex.def Info: images/07_api-overload.png  used on input line 664.
@@ -1003,7 +1003,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [24]
-<report_images/precommit_config.png, id=513, 794.97pt x 726.715pt>
+<report_images/precommit_config.png, id=533, 794.97pt x 726.715pt>
 File: report_images/precommit_config.png Graphic file (type png)
 <use report_images/precommit_config.png>
 Package pdftex.def Info: report_images/precommit_config.png  used on input line
@@ -1019,13 +1019,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [25 <./report_images/precommit_config.png>]
-<report_images/workflow_pr.png, id=520, 923.45pt x 511.9125pt>
+<report_images/workflow_pr.png, id=540, 923.45pt x 511.9125pt>
 File: report_images/workflow_pr.png Graphic file (type png)
 <use report_images/workflow_pr.png>
 Package pdftex.def Info: report_images/workflow_pr.png  used on input line 818.
 
 (pdftex.def)             Requested size: 394.35236pt x 218.61053pt.
-<report_images/sast_tools.png, id=521, 654.445pt x 818.05624pt>
+<report_images/sast_tools.png, id=541, 654.445pt x 818.05624pt>
 File: report_images/sast_tools.png Graphic file (type png)
 <use report_images/sast_tools.png>
 Package pdftex.def Info: report_images/sast_tools.png  used on input line 824.
@@ -1040,12 +1040,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [26 <./report_images/workflow_pr.png>]
-<report_images/sq1.png, id=529, 290.08376pt x 560.0925pt>
+<report_images/sq1.png, id=549, 290.08376pt x 560.0925pt>
 File: report_images/sq1.png Graphic file (type png)
 <use report_images/sq1.png>
 Package pdftex.def Info: report_images/sq1.png  used on input line 832.
 (pdftex.def)             Requested size: 210.32082pt x 406.08656pt.
-<report_images/sq2.png, id=530, 265.99374pt x 554.07pt>
+<report_images/sq2.png, id=550, 265.99374pt x 554.07pt>
 File: report_images/sq2.png Graphic file (type png)
 <use report_images/sq2.png>
 Package pdftex.def Info: report_images/sq2.png  used on input line 837.
@@ -1060,7 +1060,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [27 <./report_images/sast_tools.png>]
-<report_images/sq_artifacts.png, id=537, 919.435pt x 473.77pt>
+<report_images/sq_artifacts.png, id=557, 919.435pt x 473.77pt>
 File: report_images/sq_artifacts.png Graphic file (type png)
 <use report_images/sq_artifacts.png>
 Package pdftex.def Info: report_images/sq_artifacts.png  used on input line 844
@@ -1076,7 +1076,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [28 <./report_images/sq1.png> <./report_images/sq2.png>]
-<report_images/nightly.png, id=545, 324.21124pt x 366.36874pt>
+<report_images/nightly.png, id=565, 324.21124pt x 366.36874pt>
 File: report_images/nightly.png Graphic file (type png)
 <use report_images/nightly.png>
 Package pdftex.def Info: report_images/nightly.png  used on input line 873.
@@ -1091,12 +1091,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [29 <./report_images/sq_artifacts.png>]
-<report_images/semgrep.png, id=553, 295.1025pt x 403.5075pt>
+<report_images/semgrep.png, id=573, 295.1025pt x 403.5075pt>
 File: report_images/semgrep.png Graphic file (type png)
 <use report_images/semgrep.png>
 Package pdftex.def Info: report_images/semgrep.png  used on input line 881.
 (pdftex.def)             Requested size: 197.17618pt x 269.60977pt.
-<report_images/code_ql.png, id=554, 925.4575pt x 217.81375pt>
+<report_images/code_ql.png, id=574, 925.4575pt x 217.81375pt>
 File: report_images/code_ql.png Graphic file (type png)
 <use report_images/code_ql.png>
 Package pdftex.def Info: report_images/code_ql.png  used on input line 886.
@@ -1111,7 +1111,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [30 <./report_images/nightly.png>]
-<report_images/trivy.png, id=562, 513.92pt x 663.47874pt>
+<report_images/trivy.png, id=582, 513.92pt x 663.47874pt>
 File: report_images/trivy.png Graphic file (type png)
 <use report_images/trivy.png>
 Package pdftex.def Info: report_images/trivy.png  used on input line 893.
@@ -1126,7 +1126,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [31 <./report_images/semgrep.png> <./report_images/code_ql.png>]
-<report_images/sq4.png, id=570, 884.30376pt x 487.8225pt>
+<report_images/sq4.png, id=590, 884.30376pt x 487.8225pt>
 File: report_images/sq4.png Graphic file (type png)
 <use report_images/sq4.png>
 Package pdftex.def Info: report_images/sq4.png  used on input line 899.
@@ -1156,7 +1156,7 @@ Chapter 3.
 [34
 
 ]
-<report_images/DAST.png, id=587, 633.36626pt x 988.69376pt>
+<report_images/DAST.png, id=608, 633.36626pt x 988.69376pt>
 File: report_images/DAST.png Graphic file (type png)
 <use report_images/DAST.png>
 Package pdftex.def Info: report_images/DAST.png  used on input line 972.
@@ -1180,12 +1180,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [36 <./report_images/DAST.png>]
-<report_images/Zap.png, id=600, 1307.88625pt x 696.6025pt>
+<report_images/Zap.png, id=620, 1307.88625pt x 696.6025pt>
 File: report_images/Zap.png Graphic file (type png)
 <use report_images/Zap.png>
 Package pdftex.def Info: report_images/Zap.png  used on input line 1019.
 (pdftex.def)             Requested size: 438.17227pt x 233.37657pt.
-<report_images/alert_detail_zap.png, id=601, 1307.88625pt x 624.3325pt>
+<report_images/alert_detail_zap.png, id=621, 1307.88625pt x 624.3325pt>
 File: report_images/alert_detail_zap.png Graphic file (type png)
 <use report_images/alert_detail_zap.png>
 Package pdftex.def Info: report_images/alert_detail_zap.png  used on input line
@@ -1201,7 +1201,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [37 <./report_images/Zap.png>]
-<report_images/DAST_ZAP_2.png, id=610, 519.9425pt x 476.78125pt>
+<report_images/DAST_ZAP_2.png, id=630, 519.9425pt x 476.78125pt>
 File: report_images/DAST_ZAP_2.png Graphic file (type png)
 <use report_images/DAST_ZAP_2.png>
 Package pdftex.def Info: report_images/DAST_ZAP_2.png  used on input line 1031.
@@ -1217,13 +1217,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [38 <./report_images/alert_detail_zap.png> <./report_images/DAST_ZAP_2.png>]
-<report_images/nightly_zap_2.png, id=619, 1443.3925pt x 618.31pt>
+<report_images/nightly_zap_2.png, id=639, 1443.3925pt x 618.31pt>
 File: report_images/nightly_zap_2.png Graphic file (type png)
 <use report_images/nightly_zap_2.png>
 Package pdftex.def Info: report_images/nightly_zap_2.png  used on input line 10
 75.
 (pdftex.def)             Requested size: 438.17227pt x 187.70213pt.
-<report_images/nightly_zap.png, id=620, 1386.17876pt x 246.9225pt>
+<report_images/nightly_zap.png, id=640, 1386.17876pt x 246.9225pt>
 File: report_images/nightly_zap.png Graphic file (type png)
 <use report_images/nightly_zap.png>
 Package pdftex.def Info: report_images/nightly_zap.png  used on input line 1081
@@ -1324,26 +1324,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [44]
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1356--1361
- [] [] [] [] 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1361--1366
- [] [] [] [] 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1366--1368
- [] [] [] [] 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1368--1397
- [] [] [] [] 
- []
-
-
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1353,6 +1333,26 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [45]
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1415--1420
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1420--1425
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1425--1427
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1427--1459
+ [] [] [] [] 
+ []
+
+
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1362,7 +1362,15 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [46]
-Overfull \hbox (5.55594pt too wide) in paragraph at lines 1436--1436
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[47]
+Overfull \hbox (5.55594pt too wide) in paragraph at lines 1498--1498
 \T1/lmtt/m/n/12 /api/appointments?patientName=X 
  []
 
@@ -1373,12 +1381,20 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[47]
-<images/01_regression.png, id=686, 1204.5pt x 1077.02374pt>
+[48]
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[49]
+<images/01_regression.png, id=718, 1232.605pt x 1123.19624pt>
 File: images/01_regression.png Graphic file (type png)
 <use images/01_regression.png>
-Package pdftex.def Info: images/01_regression.png  used on input line 1461.
-(pdftex.def)             Requested size: 438.17227pt x 391.8039pt.
+Package pdftex.def Info: images/01_regression.png  used on input line 1537.
+(pdftex.def)             Requested size: 438.17227pt x 399.27731pt.
 
 
 
@@ -1388,12 +1404,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[48]
-<images/02_regression.png, id=692, 1204.5pt x 997.7275pt>
+[50]
+<images/02_regression.png, id=723, 1232.605pt x 1033.8625pt>
 File: images/02_regression.png Graphic file (type png)
 <use images/02_regression.png>
-Package pdftex.def Info: images/02_regression.png  used on input line 1467.
-(pdftex.def)             Requested size: 438.17227pt x 362.95718pt.
+Package pdftex.def Info: images/02_regression.png  used on input line 1543.
+(pdftex.def)             Requested size: 438.17227pt x 367.52069pt.
 
 
 
@@ -1403,12 +1419,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[49 <./images/01_regression.png (PNG copy)>]
-<images/03_regression.png, id=698, 1204.5pt x 1008.76875pt>
+[51 <./images/01_regression.png (PNG copy)>]
+<images/03_regression.png, id=729, 1232.605pt x 1099.10625pt>
 File: images/03_regression.png Graphic file (type png)
 <use images/03_regression.png>
-Package pdftex.def Info: images/03_regression.png  used on input line 1473.
-(pdftex.def)             Requested size: 438.17227pt x 366.97383pt.
+Package pdftex.def Info: images/03_regression.png  used on input line 1549.
+(pdftex.def)             Requested size: 438.17227pt x 390.71373pt.
 
 
 
@@ -1418,12 +1434,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[50 <./images/02_regression.png (PNG copy)>]
-<images/04_regression.png, id=705, 1204.5pt x 1007.765pt>
+[52 <./images/02_regression.png (PNG copy)>]
+<images/04_regression.png, id=735, 1232.605pt x 1107.13625pt>
 File: images/04_regression.png Graphic file (type png)
 <use images/04_regression.png>
-Package pdftex.def Info: images/04_regression.png  used on input line 1479.
-(pdftex.def)             Requested size: 438.17227pt x 366.60867pt.
+Package pdftex.def Info: images/04_regression.png  used on input line 1555.
+(pdftex.def)             Requested size: 438.17227pt x 393.56827pt.
 
 
 
@@ -1433,12 +1449,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[51 <./images/03_regression.png (PNG copy)>]
-<images/05_regression.png, id=711, 1204.5pt x 1020.81375pt>
+[53 <./images/03_regression.png (PNG copy)>]
+<images/05_regression.png, id=741, 1232.605pt x 1104.125pt>
 File: images/05_regression.png Graphic file (type png)
 <use images/05_regression.png>
-Package pdftex.def Info: images/05_regression.png  used on input line 1485.
-(pdftex.def)             Requested size: 438.17227pt x 371.3556pt.
+Package pdftex.def Info: images/05_regression.png  used on input line 1561.
+(pdftex.def)             Requested size: 438.17227pt x 392.49782pt.
 
 
 
@@ -1448,12 +1464,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[52 <./images/04_regression.png (PNG copy)>]
-<images/06_regression.png, id=717, 1204.5pt x 970.62625pt>
+[54 <./images/04_regression.png (PNG copy)>]
+<images/06_regression.png, id=748, 1232.605pt x 992.70876pt>
 File: images/06_regression.png Graphic file (type png)
 <use images/06_regression.png>
-Package pdftex.def Info: images/06_regression.png  used on input line 1491.
-(pdftex.def)             Requested size: 438.17227pt x 353.0982pt.
+Package pdftex.def Info: images/06_regression.png  used on input line 1567.
+(pdftex.def)             Requested size: 438.17227pt x 352.89122pt.
 
 
 
@@ -1463,12 +1479,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[53 <./images/05_regression.png (PNG copy)>]
-<images/07_regression.png, id=723, 1204.5pt x 1009.7725pt>
+[55 <./images/05_regression.png (PNG copy)>]
+<images/07_regression.png, id=754, 1232.605pt x 1078.0275pt>
 File: images/07_regression.png Graphic file (type png)
 <use images/07_regression.png>
-Package pdftex.def Info: images/07_regression.png  used on input line 1497.
-(pdftex.def)             Requested size: 438.17227pt x 367.33897pt.
+Package pdftex.def Info: images/07_regression.png  used on input line 1573.
+(pdftex.def)             Requested size: 438.17227pt x 383.2206pt.
 
 
 
@@ -1478,7 +1494,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[54 <./images/06_regression.png (PNG copy)>]
+[56 <./images/06_regression.png (PNG copy)>]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1487,7 +1503,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[55 <./images/07_regression.png (PNG copy)>]
+[57 <./images/07_regression.png (PNG copy)>]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1496,22 +1512,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[56] (./report.aux)
+[58] (./report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 1E442B976FCEE0A2176151055C79EAD6;10932.
+(rerunfilecheck)             Checksum: 3335CDF4D6F9EA8B33CF88462167C9CC;11590.
  ) 
 Here is how much of TeX's memory you used:
- 16525 strings out of 475085
- 274297 string characters out of 5764176
- 726304 words of memory out of 5000000
- 38924 multiletter control sequences out of 15000+600000
+ 16531 strings out of 475085
+ 274419 string characters out of 5764176
+ 726307 words of memory out of 5000000
+ 38928 multiletter control sequences out of 15000+600000
  629573 words of font info for 158 fonts, out of 8000000 for 9000
  61 hyphenation exceptions out of 8191
- 75i,13n,79p,1195b,620s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,12n,79p,1195b,620s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/fonts/ty
 pe1/public/lm/lmbx12.pfb></usr/share/texmf/fonts/type1/public/lm/lmr10.pfb></us
 r/share/texmf/fonts/type1/public/lm/lmr12.pfb></usr/share/texmf/fonts/type1/pub
@@ -1519,10 +1535,10 @@ lic/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/t
 exmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/l
 mri12.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/
 fonts/type1/public/lm/lmtt12.pfb>
-Output written on report.pdf (57 pages, 5056039 bytes).
+Output written on report.pdf (59 pages, 5202521 bytes).
 PDF statistics:
- 846 PDF objects out of 1000 (max. 8388607)
- 697 compressed objects within 7 object streams
- 219 named destinations out of 1000 (max. 500000)
- 40143 words of extra memory for PDF output out of 42996 (max. 10000000)
+ 871 PDF objects out of 1000 (max. 8388607)
+ 719 compressed objects within 8 object streams
+ 221 named destinations out of 1000 (max. 500000)
+ 40175 words of extra memory for PDF output out of 42996 (max. 10000000)
 
