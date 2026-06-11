@@ -147,6 +147,7 @@ function AppointmentsPanel({
             )}
             {appointmentRows.map((appointment) => {
               const statusClassName = STATUS_CLASS_BY_VALUE[appointment.statusClass]
+              // eslint-disable-next-line security/detect-object-injection -- styles keys are CSS module identifiers generated at build time; statusClassName comes from the closed STATUS_CLASS_BY_VALUE map
               const statusClass = statusClassName ? styles[statusClassName] : ''
 
               return (
