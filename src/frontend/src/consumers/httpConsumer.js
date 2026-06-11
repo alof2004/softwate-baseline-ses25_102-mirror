@@ -1,6 +1,17 @@
+import keycloak from '../auth/keycloak.js'
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
 
 export async function requestApi(path, options = {}) {
+  // Refresh the access token if it expires in less than 30 seconds.
+  // If the refresh token is also expired, redirect to login.
+  try {
+    await keycloak.updateToken(30)
+  } catch {
+    keycloak.login({ redirectUri: window.location.href })
+    throw new Error('Session expired')
+  }
+
   const config = { ...options }
   const headers = { ...(config.headers ?? {}) }
 
@@ -8,6 +19,7 @@ export async function requestApi(path, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
+  headers['Authorization'] = `Bearer ${keycloak.token}`
   config.headers = headers
 
   const response = await fetch(`${API_BASE}${path}`, config)

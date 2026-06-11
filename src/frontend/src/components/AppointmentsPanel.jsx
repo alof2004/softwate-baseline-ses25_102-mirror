@@ -1,3 +1,4 @@
+import { usePermissions } from '../auth/usePermissions.js'
 import { SPECIALTIES, STATUSES, toStatusLabel } from '../constants/clinicOptions'
 import styles from '../pages/ClinicDashboardPage.module.css'
 import { toDateTimeDisplay } from '../utils/dateTime'
@@ -21,6 +22,8 @@ function AppointmentsPanel({
   onStartEdit,
   onDelete,
 }) {
+  const { can } = usePermissions()
+
   return (
     <section id="appointments" className={styles.panel}>
       <div className={styles.panelHeading}>
@@ -28,16 +31,18 @@ function AppointmentsPanel({
         <p>Manage appointment records and filter directly through the backend.</p>
       </div>
 
-      <div className={styles.panelActions}>
-        <button
-          type="button"
-          className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={onCreate}
-          disabled={busyAction}
-        >
-          New Appointment
-        </button>
-      </div>
+      {can('appointments', 'CREATE') && (
+        <div className={styles.panelActions}>
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            onClick={onCreate}
+            disabled={busyAction}
+          >
+            New Appointment
+          </button>
+        </div>
+      )}
 
       <form className={styles.filterForm} onSubmit={onApplyFilters}>
         <label>
@@ -155,22 +160,26 @@ function AppointmentsPanel({
                     </span>
                   </td>
                   <td className={styles.actionsCell}>
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnGhost}`}
-                      onClick={() => onStartEdit(appointment)}
-                      disabled={busyAction}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnDanger}`}
-                      onClick={() => onDelete(appointment)}
-                      disabled={busyAction}
-                    >
-                      Delete
-                    </button>
+                    {can('appointments', 'UPDATE') && (
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnGhost}`}
+                        onClick={() => onStartEdit(appointment)}
+                        disabled={busyAction}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {can('appointments', 'DELETE') && (
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnDanger}`}
+                        onClick={() => onDelete(appointment)}
+                        disabled={busyAction}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </td>
                 </tr>
               )

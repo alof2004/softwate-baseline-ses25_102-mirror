@@ -46,7 +46,7 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "protocol": "openid-connect",
       "rootUrl": "http://localhost:5173",
@@ -82,10 +82,10 @@
 
   "users": [
     {
-      "username": "admin.user",
+      "username": "admin",
       "email": "admin@clinic.local",
       "firstName": "Admin",
-      "lastName": "User",
+      "lastName": "Clinic",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -98,10 +98,10 @@
       "realmRoles": ["ADMIN"]
     },
     {
-      "username": "doctor.user",
+      "username": "doctor",
       "email": "doctor@clinic.local",
       "firstName": "Doctor",
-      "lastName": "User",
+      "lastName": "Clinic",
       "enabled": true,
       "emailVerified": true,
       "credentials": [
@@ -114,10 +114,10 @@
       "realmRoles": ["DOCTOR"]
     },
     {
-      "username": "receptionist.user",
+      "username": "receptionist",
       "email": "receptionist@clinic.local",
       "firstName": "Receptionist",
-      "lastName": "User",
+      "lastName": "Clinic",
       "enabled": true,
       "emailVerified": true,
       "credentials": [

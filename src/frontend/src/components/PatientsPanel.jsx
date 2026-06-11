@@ -1,3 +1,4 @@
+import { usePermissions } from '../auth/usePermissions.js'
 import styles from '../pages/ClinicDashboardPage.module.css'
 import { formatDatePt, formatIntegerPt, formatPhonePt } from '../utils/locale'
 
@@ -8,6 +9,8 @@ function PatientsPanel({
   onStartEdit,
   onDelete,
 }) {
+  const { can } = usePermissions()
+
   return (
     <section id="patients" className={styles.panel}>
       <div className={styles.panelHeading}>
@@ -15,16 +18,18 @@ function PatientsPanel({
         <p>Create, edit, and remove patient records.</p>
       </div>
 
-      <div className={styles.panelActions}>
-        <button
-          type="button"
-          className={`${styles.btn} ${styles.btnPrimary}`}
-          onClick={onCreate}
-          disabled={busyAction}
-        >
-          New Patient
-        </button>
-      </div>
+      {can('patients', 'CREATE') && (
+        <div className={styles.panelActions}>
+          <button
+            type="button"
+            className={`${styles.btn} ${styles.btnPrimary}`}
+            onClick={onCreate}
+            disabled={busyAction}
+          >
+            New Patient
+          </button>
+        </div>
+      )}
 
       <div className={styles.tableWrap}>
         <table>
@@ -52,22 +57,26 @@ function PatientsPanel({
                 <td>{patient.email}</td>
                 <td>{formatIntegerPt((patient.appointments ?? []).length)}</td>
                 <td className={styles.actionsCell}>
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnGhost}`}
-                    onClick={() => onStartEdit(patient)}
-                    disabled={busyAction}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnDanger}`}
-                    onClick={() => onDelete(patient)}
-                    disabled={busyAction}
-                  >
-                    Delete
-                  </button>
+                  {can('patients', 'UPDATE') && (
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      onClick={() => onStartEdit(patient)}
+                      disabled={busyAction}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {can('patients', 'DELETE') && (
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnDanger}`}
+                      onClick={() => onDelete(patient)}
+                      disabled={busyAction}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
