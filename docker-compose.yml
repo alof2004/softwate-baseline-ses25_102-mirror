@@ -88,7 +88,7 @@ services:
     container_name: clinic-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT}:8080"
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.2.5
