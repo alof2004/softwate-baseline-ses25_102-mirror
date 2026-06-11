@@ -367,12 +367,13 @@ jobs:
 
       - name: Collect WAF ModSecurity audit log
         if: always()
+        timeout-minutes: 2
         run: |
           mkdir -p dast/reports
-          docker exec waf cat /var/log/modsec_audit.log > dast/reports/modsec-audit.log 2>/dev/null || true
-          docker exec waf cat /var/log/nginx/access.log  > dast/reports/nginx-access.log 2>/dev/null || true
+          timeout 60 docker exec waf cat /var/log/modsec_audit.log > dast/reports/modsec-audit.log 2>/dev/null || echo "audit log unavailable or empty"
+          timeout 60 docker exec waf cat /var/log/nginx/access.log  > dast/reports/nginx-access.log 2>/dev/null || echo "access log unavailable"
           echo "ModSecurity blocks during scan:"
-          grep -c "action=intercepted" dast/reports/modsec-audit.log || echo "0 blocks"
+          grep -c "is_interrupted.*true" dast/reports/modsec-audit.log 2>/dev/null || echo "0 blocks"
 
       - name: Upload DAST WAF reports
         if: always()
