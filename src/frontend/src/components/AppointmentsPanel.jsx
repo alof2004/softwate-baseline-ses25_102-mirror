@@ -160,27 +160,29 @@ function AppointmentsPanel({
                       {appointment.statusLabel}
                     </span>
                   </td>
-                  <td className={styles.actionsCell}>
-                    {can('appointments', 'UPDATE') && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnGhost}`}
-                        onClick={() => onStartEdit(appointment)}
-                        disabled={busyAction}
-                      >
-                        Edit
-                      </button>
-                    )}
-                    {can('appointments', 'DELETE') && (
-                      <button
-                        type="button"
-                        className={`${styles.btn} ${styles.btnDanger}`}
-                        onClick={() => onDelete(appointment)}
-                        disabled={busyAction}
-                      >
-                        Delete
-                      </button>
-                    )}
+                  <td>
+                    <div className={styles.actionsCell}>
+                      {can('appointments', 'UPDATE') && (
+                        <button
+                          type="button"
+                          className={`${styles.btn} ${styles.btnGhost}`}
+                          onClick={() => onStartEdit(appointment)}
+                          disabled={busyAction}
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {can('appointments', 'DELETE') && (
+                        <button
+                          type="button"
+                          className={`${styles.btn} ${styles.btnDanger}`}
+                          onClick={() => onDelete(appointment)}
+                          disabled={busyAction}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )
