@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  10 JUN 2026 21:39
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  11 JUN 2026 14:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -482,8 +482,8 @@ Package: ragged2e 2023/06/22 v3.6 ragged2e Package
 \RaggedRightParindent=\skip90
 \JustifyingParindent=\skip91
 )
-Package hyperref Info: Option `colorlinks' set `true' on input line 49.
-LaTeX Font Info:    Trying to load font information for T1+lmr on input line 82
+Package hyperref Info: Option `colorlinks' set `true' on input line 54.
+LaTeX Font Info:    Trying to load font information for T1+lmr on input line 87
 .
 
 (/usr/share/texmf/tex/latex/lm/t1lmr.fd
@@ -497,24 +497,24 @@ File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 (./report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 82.
-LaTeX Font Info:    ... okay on input line 82.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -572,26 +572,26 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 82.
+Package hyperref Info: Link coloring ON on input line 87.
 
 (./report.out) (./report.out)
 \@outlinefile=\write3
 \openout3 = `report.out'.
 
-LaTeX Info: Redefining \microtypecontext on input line 82.
-Package microtype Info: Applying patch `item' on input line 82.
-Package microtype Info: Applying patch `toc' on input line 82.
-Package microtype Info: Applying patch `eqnum' on input line 82.
-Package microtype Info: Applying patch `footnote' on input line 82.
-Package microtype Info: Applying patch `verbatim' on input line 82.
-LaTeX Info: Redefining \microtypesetup on input line 82.
+LaTeX Info: Redefining \microtypecontext on input line 87.
+Package microtype Info: Applying patch `item' on input line 87.
+Package microtype Info: Applying patch `toc' on input line 87.
+Package microtype Info: Applying patch `eqnum' on input line 87.
+Package microtype Info: Applying patch `footnote' on input line 87.
+Package microtype Info: Applying patch `verbatim' on input line 87.
+LaTeX Info: Redefining \microtypesetup on input line 87.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 82.
+LaTeX Info: Redefining \showhyphens on input line 87.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -603,45 +603,45 @@ File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: End \AtBeginDocument code.
-<report_images/uni.png, id=265, 545.03625pt x 225.84375pt>
+<report_images/uni.png, id=269, 545.03625pt x 225.84375pt>
 File: report_images/uni.png Graphic file (type png)
 <use report_images/uni.png>
-Package pdftex.def Info: report_images/uni.png  used on input line 89.
+Package pdftex.def Info: report_images/uni.png  used on input line 94.
 (pdftex.def)             Requested size: 137.33156pt x 56.9055pt.
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 9
-0.
+5.
 
 (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 9
-0.
+5.
 
 (/usr/share/texmf/tex/latex/lm/omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-90.
+95.
 
 (/usr/share/texmf/tex/latex/lm/omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-90.
+95.
 
 (/usr/share/texmf/tex/latex/lm/omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 90.
+(Font)              <12> on input line 95.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 90.
+(Font)              <8> on input line 95.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 90.
-<report_images/deti.png, id=267, 681.54625pt x 343.2825pt>
+(Font)              <6> on input line 95.
+<report_images/deti.png, id=271, 681.54625pt x 343.2825pt>
 File: report_images/deti.png Graphic file (type png)
 <use report_images/deti.png>
-Package pdftex.def Info: report_images/deti.png  used on input line 94.
+Package pdftex.def Info: report_images/deti.png  used on input line 99.
 (pdftex.def)             Requested size: 112.97025pt x 56.9055pt.
 
 
@@ -656,7 +656,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.38 ...}{\numberline {3.3}Scope}{26}{section.3.3}
+l.38 ...}{\numberline {3.3}Scope}{34}{section.3.3}
                                                   % [1
 
 ])
@@ -675,12 +675,12 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 [2]
 Chapter 1.
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-31.
+36.
 (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-61.
+66.
 
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
@@ -695,12 +695,11 @@ Package microtype Info: Loading generic protrusion settings for font family
 
 
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}]
-Overfull \hbox (65.55597pt too wide) in paragraph at lines 165--166
-[]\T1/lmtt/m/n/12 PUT /api/appointments/{id} \T1/lmr/m/n/12 (-20) al-lows re-as
-signing a pa-tient via body \T1/lmtt/m/n/12 {"patient":{"id":X}}\T1/lmr/m/n/12 
-(-20) . 
- []
-
+<report_images/assets.png, id=366, 282.05376pt x 893.3375pt>
+File: report_images/assets.png Graphic file (type png)
+<use report_images/assets.png>
+Package pdftex.def Info: report_images/assets.png  used on input line 200.
+(pdftex.def)             Requested size: 175.26622pt x 555.1176pt.
 
 
 
@@ -711,21 +710,25 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [4]
-<report_images/DFD0.png, id=366, 1214.5375pt x 316.18124pt>
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[5 <./report_images/assets.png>]
+<report_images/DFD0.png, id=378, 1214.5375pt x 316.18124pt>
 File: report_images/DFD0.png Graphic file (type png)
 <use report_images/DFD0.png>
-Package pdftex.def Info: report_images/DFD0.png  used on input line 213.
+Package pdftex.def Info: report_images/DFD0.png  used on input line 224.
 (pdftex.def)             Requested size: 328.6292pt x 85.54858pt.
-<report_images/DFD1.png, id=367, 1444.39626pt x 362.35374pt>
+<report_images/DFD1.png, id=379, 1567.8575pt x 371.3875pt>
 File: report_images/DFD1.png Graphic file (type png)
 <use report_images/DFD1.png>
-Package pdftex.def Info: report_images/DFD1.png  used on input line 228.
-(pdftex.def)             Requested size: 438.17227pt x 109.92336pt.
-<report_images/DFD2.png, id=368, 733.74126pt x 730.73pt>
-File: report_images/DFD2.png Graphic file (type png)
-<use report_images/DFD2.png>
-Package pdftex.def Info: report_images/DFD2.png  used on input line 247.
-(pdftex.def)             Requested size: 328.6292pt x 327.28676pt.
+Package pdftex.def Info: report_images/DFD1.png  used on input line 239.
+(pdftex.def)             Requested size: 438.17227pt x 103.78944pt.
 
 
 
@@ -735,11 +738,16 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[5 <./report_images/DFD0.png> <./report_images/DFD1.png>]
-<report_images/FLOW2.png, id=381, 1004.75375pt x 624.3325pt>
+[6 <./report_images/DFD0.png> <./report_images/DFD1.png>]
+<report_images/DFD2.png, id=391, 733.74126pt x 730.73pt>
+File: report_images/DFD2.png Graphic file (type png)
+<use report_images/DFD2.png>
+Package pdftex.def Info: report_images/DFD2.png  used on input line 258.
+(pdftex.def)             Requested size: 328.6292pt x 327.28676pt.
+<report_images/FLOW2.png, id=392, 1004.75375pt x 624.3325pt>
 File: report_images/FLOW2.png Graphic file (type png)
 <use report_images/FLOW2.png>
-Package pdftex.def Info: report_images/FLOW2.png  used on input line 253.
+Package pdftex.def Info: report_images/FLOW2.png  used on input line 264.
 (pdftex.def)             Requested size: 438.17227pt x 272.26836pt.
 
 
@@ -750,47 +758,30 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[6 <./report_images/DFD2.png> <./report_images/FLOW2.png>]
-Overfull \hbox (12.02315pt too wide) in paragraph at lines 270--270
+[7 <./report_images/DFD2.png>]
+Overfull \hbox (12.02315pt too wide) in paragraph at lines 281--281
 []|\T1/lmr/bx/n/12 (-20) Relevance|  
  []
 
 
-Overfull \hbox (12.02315pt too wide) in paragraph at lines 275--275
+Overfull \hbox (12.02315pt too wide) in paragraph at lines 286--286
 []|\T1/lmr/bx/n/12 (-20) Relevance|  
  []
 
 
-Underfull \hbox (badness 4518) in paragraph at lines 285--285
-\T1/lmr/m/n/12 (+20) and \T1/lmtt/m/n/12 GET 
- []
-
-
-Overfull \hbox (2.46208pt too wide) in paragraph at lines 287--287
+Overfull \hbox (2.46208pt too wide) in paragraph at lines 298--298
 []|[]\T1/lmr/bx/n/12 (-20) Medium[]|  
  []
 
 
-Underfull \hbox (badness 1082) in paragraph at lines 289--289
-[]|\T1/lmr/bx/n/12 (+20) Non- 
- []
-
-
-Overfull \hbox (2.46208pt too wide) in paragraph at lines 289--289
+Overfull \hbox (2.46208pt too wide) in paragraph at lines 300--300
 []|[]\T1/lmr/bx/n/12 (-20) Medium[]|  
  []
 
 
-Overfull \hbox (2.46208pt too wide) in paragraph at lines 291--291
+Overfull \hbox (2.46208pt too wide) in paragraph at lines 302--302
 []|[]\T1/lmr/bx/n/12 (-20) Medium[]|  
  []
-
-
-Underfull \hbox (badness 1082) in paragraph at lines 293--293
-[]|\T1/lmr/bx/n/12 (+20) Non- 
- []
-
-
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -799,76 +790,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[7]
-Overfull \hbox (50.53665pt too wide) in paragraph at lines 312--312
-[]|\T1/lmtt/m/n/12 AppointmentController.create()
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 312--312
-\T1/lmr/m/n/12 (+20) ac-cepts \T1/lmtt/m/n/12 patientId
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 312--312
-\T1/lmr/m/n/12 (+20) from the re-quest.
- []
-
-
-Overfull \hbox (31.7029pt too wide) in paragraph at lines 312--312
-\T1/lmtt/m/n/12 AppointmentService.create()
- []
-
-
-Overfull \hbox (33.17792pt too wide) in paragraph at lines 330--330
-\T1/lmtt/m/n/12 /api/appointments/{id} 
- []
-
-
-Overfull \hbox (32.01164pt too wide) in paragraph at lines 330--330
-[]|\T1/lmtt/m/n/12 AppointmentService.update()
- []
-
-
-Overfull \hbox (8.4779pt too wide) in paragraph at lines 330--330
-\T1/lmtt/m/n/12 /api/patients/{id} 
- []
-
-
-Overfull \hbox (7.31163pt too wide) in paragraph at lines 330--330
-[]|\T1/lmtt/m/n/12 PatientService.update()
- []
-
-
-Underfull \hbox (badness 4279) in paragraph at lines 330--330
-[]|\T1/lmtt/m/n/12 specialty \T1/lmr/m/n/12 (+20) and \T1/lmtt/m/n/12 status
- []
-
-
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[8]
-Underfull \hbox (badness 10000) in paragraph at lines 346--346
-[]|\T1/lmr/m/n/12 (+20) Patient uses
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 346--346
-\T1/lmtt/m/n/12 CascadeType.ALL \T1/lmr/m/n/12 (+20) and
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 346--346
-\T1/lmtt/m/n/12 orphanRemoval = true
- []
-
-
+[8 <./report_images/FLOW2.png>]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -878,41 +800,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [9]
-Overfull \hbox (7.31163pt too wide) in paragraph at lines 365--365
-[]|\T1/lmtt/m/n/12 PatientService.getAll()
- []
-
-
-Underfull \hbox (badness 6141) in paragraph at lines 365--365
-[]|\T1/lmr/m/n/12 (+20) No ex-plicit pro-duc-tion
- []
-
-
-Underfull \hbox (badness 2680) in paragraph at lines 365--365
-\T1/lmr/m/n/12 (+20) error-handling pol-icy is
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 365--365
-[]|\T1/lmtt/m/n/12 docker-compose.yml
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 365--365
-[]|\T1/lmtt/m/n/12 docker-compose.yml
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 365--365
-\T1/lmr/m/n/12 (+20) pub-lishes the back-end
- []
-
-
-Underfull \hbox (badness 2990) in paragraph at lines 365--365
-\T1/lmr/m/n/12 (+20) port to the host, not
- []
-
-
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -922,33 +809,8 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [10]
-Overfull \hbox (4.7729pt too wide) in paragraph at lines 381--381
-\T1/lmtt/m/n/12 /api/appointments 
- []
-
-
-Underfull \hbox (badness 1400) in paragraph at lines 381--381
-[]|\T1/lmr/m/n/12 (+20) No pag-i- 
- []
-
-
-Overfull \hbox (4.7729pt too wide) in paragraph at lines 381--381
-\T1/lmtt/m/n/12 /api/appointments 
- []
-
-
-Overfull \hbox (81.41167pt too wide) in paragraph at lines 381--381
-[]|\T1/lmtt/m/n/12 appointmentRepository.findAll(spec)
- []
-
-
-Underfull \hbox (badness 1881) in paragraph at lines 381--381
-[]|\T1/lmtt/m/n/12 DELETE 
- []
-
-
-Overfull \hbox (8.4779pt too wide) in paragraph at lines 381--381
-\T1/lmtt/m/n/12 /api/patients/{id} 
+Overfull \hbox (4.46619pt too wide) in paragraph at lines 376--376
+[]|\T1/lmtt/m/n/12 PatientService.getAll()
  []
 
 
@@ -961,33 +823,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [11]
-Underfull \hbox (badness 10000) in paragraph at lines 397--397
-[]|\T1/lmr/m/n/12 (+20) No RBAC, own-er-ship
+Overfull \hbox (13.30882pt too wide) in paragraph at lines 392--392
+\T1/lmtt/m/n/12 /api/appointments 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 397--397
-\T1/lmr/m/n/12 (+20) check, or record-level
+Overfull \hbox (13.30882pt too wide) in paragraph at lines 392--392
+\T1/lmtt/m/n/12 /api/appointments 
  []
 
 
-Underfull \hbox (badness 1275) in paragraph at lines 397--397
-[]|\T1/lmr/m/n/12 (+20) The up-date flow trusts
- []
-
-
-Underfull \hbox (badness 4144) in paragraph at lines 397--397
-[]|\T1/lmtt/m/n/12 PUT 
- []
-
-
-Overfull \hbox (33.17792pt too wide) in paragraph at lines 397--397
-\T1/lmtt/m/n/12 /api/appointments/{id} 
- []
-
-
-Overfull \hbox (32.01164pt too wide) in paragraph at lines 397--397
-[]|\T1/lmtt/m/n/12 AppointmentService.update()
+Overfull \hbox (17.01382pt too wide) in paragraph at lines 392--392
+\T1/lmtt/m/n/12 /api/patients/{id} 
  []
 
 
@@ -1000,12 +847,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [12]
-Overfull \hbox (24.4362pt too wide) in paragraph at lines 412--413
-   [] \T1/lmr/m/n/12 (-20) The at-tacker sends di-rect re-quests to \T1/lmtt/m/
-n/12 /api/patients \T1/lmr/m/n/12 (-20) and \T1/lmtt/m/n/12 /api/appointments
- []
-
-
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1014,19 +855,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[13{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}]
-Overfull \hbox (42.56865pt too wide) in paragraph at lines 444--445
-   [] \T1/lmr/m/n/12 (-20) The at-tacker sends an unau-then-ti-cated PUT re-que
-st to \T1/lmtt/m/n/12 /api/appointments/{id}\T1/lmr/m/n/12 (-20) .
- []
-
-
-Overfull \hbox (30.6712pt too wide) in paragraph at lines 452--453
-   [] \T1/lmr/m/n/12 (-20) The at-tacker sends unau-then-ti-cated DELETE re-que
-sts to \T1/lmtt/m/n/12 /api/patients/{id}\T1/lmr/m/n/12 (-20) .
- []
-
-
+[13]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1035,13 +864,10 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[14]
-<images/01_unauthorized-data-access.png, id=433, 2107.875pt x 1165.35374pt>
-File: images/01_unauthorized-data-access.png Graphic file (type png)
-<use images/01_unauthorized-data-access.png>
-Package pdftex.def Info: images/01_unauthorized-data-access.png  used on input 
-line 483.
-(pdftex.def)             Requested size: 403.11768pt x 222.85983pt.
+[14{/usr/share/texmf/fonts/enc/dvips/lm/lm-mathsy.enc}]
+
+LaTeX Warning: \verb may be unreliable inside tabularx on input line 476.
+
 
 
 
@@ -1052,12 +878,21 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [15]
-<images/02_linking-and-inference.png, id=438, 2107.875pt x 1217.2978pt>
-File: images/02_linking-and-inference.png Graphic file (type png)
-<use images/02_linking-and-inference.png>
-Package pdftex.def Info: images/02_linking-and-inference.png  used on input lin
-e 506.
-(pdftex.def)             Requested size: 403.11768pt x 232.79352pt.
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[16]
+<images/01_unauthorized-data-access.png, id=456, 2107.875pt x 1165.35374pt>
+File: images/01_unauthorized-data-access.png Graphic file (type png)
+<use images/01_unauthorized-data-access.png>
+Package pdftex.def Info: images/01_unauthorized-data-access.png  used on input 
+line 526.
+(pdftex.def)             Requested size: 403.11768pt x 222.85983pt.
 
 
 
@@ -1067,12 +902,18 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[16 <./images/01_unauthorized-data-access.png (PNG copy)>]
-<images/03_patient-enumeration.png, id=445, 2107.875pt x 1317.42188pt>
+[17 <./images/01_unauthorized-data-access.png (PNG copy)>]
+<images/02_linking-and-inference.png, id=464, 2107.875pt x 1217.2978pt>
+File: images/02_linking-and-inference.png Graphic file (type png)
+<use images/02_linking-and-inference.png>
+Package pdftex.def Info: images/02_linking-and-inference.png  used on input lin
+e 549.
+(pdftex.def)             Requested size: 403.11768pt x 232.79352pt.
+<images/03_patient-enumeration.png, id=465, 2107.875pt x 1317.42188pt>
 File: images/03_patient-enumeration.png Graphic file (type png)
 <use images/03_patient-enumeration.png>
 Package pdftex.def Info: images/03_patient-enumeration.png  used on input line 
-529.
+572.
 (pdftex.def)             Requested size: 372.4491pt x 232.76352pt.
 
 
@@ -1083,11 +924,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[17 <./images/02_linking-and-inference.png (PNG copy)>]
-<images/04_record-tampering.png, id=452, 2107.875pt x 960.58875pt>
+[18 <./images/02_linking-and-inference.png (PNG copy)>]
+<images/04_record-tampering.png, id=474, 2107.875pt x 960.58875pt>
 File: images/04_record-tampering.png Graphic file (type png)
 <use images/04_record-tampering.png>
-Package pdftex.def Info: images/04_record-tampering.png  used on input line 552
+Package pdftex.def Info: images/04_record-tampering.png  used on input line 595
 .
 (pdftex.def)             Requested size: 438.17227pt x 199.67755pt.
 
@@ -1099,19 +940,19 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[18 <./images/03_patient-enumeration.png (PNG copy)> <./images/04_record-tamper
+[19 <./images/03_patient-enumeration.png (PNG copy)> <./images/04_record-tamper
 ing.png (PNG copy)>]
-<images/05_cascade-deletion.png, id=461, 2107.875pt x 1312.905pt>
+<images/05_cascade-deletion.png, id=482, 2107.875pt x 1312.905pt>
 File: images/05_cascade-deletion.png Graphic file (type png)
 <use images/05_cascade-deletion.png>
-Package pdftex.def Info: images/05_cascade-deletion.png  used on input line 575
+Package pdftex.def Info: images/05_cascade-deletion.png  used on input line 618
 .
 (pdftex.def)             Requested size: 438.17227pt x 272.91353pt.
-<images/06_undetectable-actions.png, id=462, 2107.875pt x 1206.75844pt>
+<images/06_undetectable-actions.png, id=483, 2107.875pt x 1206.75844pt>
 File: images/06_undetectable-actions.png Graphic file (type png)
 <use images/06_undetectable-actions.png>
 Package pdftex.def Info: images/06_undetectable-actions.png  used on input line
- 598.
+ 641.
 (pdftex.def)             Requested size: 438.17227pt x 250.84885pt.
 
 
@@ -1122,11 +963,11 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[19 <./images/05_cascade-deletion.png (PNG copy)>]
-<images/07_api-overload.png, id=471, 2107.875pt x 1249.66875pt>
+[20 <./images/05_cascade-deletion.png (PNG copy)>]
+<images/07_api-overload.png, id=491, 2107.875pt x 1249.66875pt>
 File: images/07_api-overload.png Graphic file (type png)
 <use images/07_api-overload.png>
-Package pdftex.def Info: images/07_api-overload.png  used on input line 621.
+Package pdftex.def Info: images/07_api-overload.png  used on input line 664.
 (pdftex.def)             Requested size: 438.17227pt x 259.7686pt.
 
 
@@ -1137,7 +978,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[20 <./images/06_undetectable-actions.png (PNG copy)>]
+[21 <./images/06_undetectable-actions.png (PNG copy)>]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1146,41 +987,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[21 <./images/07_api-overload.png (PNG copy)>]
+[22 <./images/07_api-overload.png (PNG copy)>]
 Chapter 2.
 
 
-[22
+[23
 
 ]
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[23]
-Overfull \hbox (183.1267pt too wide) in paragraph at lines 760--761
-[]\T1/lmr/bx/n/12 (-20) Semgrep (medium) \T1/lmr/m/n/12 (-20) -- dy-namic URL u
-sed with \T1/lmtt/m/n/12 urllib \T1/lmr/m/n/12 (-20) in \T1/lmtt/m/n/12 .github
-/scripts/build_sonarqube_pr_comment.py:24\T1/lmr/m/n/12 (-20) . 
- []
-
-
-Overfull \hbox (31.75255pt too wide) in paragraph at lines 761--762
-[]\T1/lmr/bx/n/12 (-20) ESLint (2 warn-ings) \T1/lmr/m/n/12 (-20) -- Generic Ob
--ject In-jec-tion Sink in \T1/lmtt/m/n/12 AppointmentsPanel.jsx:145
- []
-
-
-Overfull \hbox (1.51909pt too wide) in paragraph at lines 769--770
-\T1/lmr/bx/n/12 (-20) CodeQL: \T1/lmr/m/n/12 (-20) No prob-lems found. Scanned:
- GitHub Ac-tions (3/3), Java (10/11), JavaScript
- []
-
-
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1190,6 +1003,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [24]
+<report_images/precommit_config.png, id=513, 794.97pt x 726.715pt>
+File: report_images/precommit_config.png Graphic file (type png)
+<use report_images/precommit_config.png>
+Package pdftex.def Info: report_images/precommit_config.png  used on input line
+ 785.
+(pdftex.def)             Requested size: 350.53915pt x 320.45418pt.
+
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1198,152 +1018,149 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[25]
+[25 <./report_images/precommit_config.png>]
+<report_images/workflow_pr.png, id=520, 923.45pt x 511.9125pt>
+File: report_images/workflow_pr.png Graphic file (type png)
+<use report_images/workflow_pr.png>
+Package pdftex.def Info: report_images/workflow_pr.png  used on input line 818.
+
+(pdftex.def)             Requested size: 394.35236pt x 218.61053pt.
+<report_images/sast_tools.png, id=521, 654.445pt x 818.05624pt>
+File: report_images/sast_tools.png Graphic file (type png)
+<use report_images/sast_tools.png>
+Package pdftex.def Info: report_images/sast_tools.png  used on input line 824.
+(pdftex.def)             Requested size: 372.4491pt x 465.56044pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[26 <./report_images/workflow_pr.png>]
+<report_images/sq1.png, id=529, 290.08376pt x 560.0925pt>
+File: report_images/sq1.png Graphic file (type png)
+<use report_images/sq1.png>
+Package pdftex.def Info: report_images/sq1.png  used on input line 832.
+(pdftex.def)             Requested size: 210.32082pt x 406.08656pt.
+<report_images/sq2.png, id=530, 265.99374pt x 554.07pt>
+File: report_images/sq2.png Graphic file (type png)
+<use report_images/sq2.png>
+Package pdftex.def Info: report_images/sq2.png  used on input line 837.
+(pdftex.def)             Requested size: 210.32082pt x 438.11632pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[27 <./report_images/sast_tools.png>]
+<report_images/sq_artifacts.png, id=537, 919.435pt x 473.77pt>
+File: report_images/sq_artifacts.png Graphic file (type png)
+<use report_images/sq_artifacts.png>
+Package pdftex.def Info: report_images/sq_artifacts.png  used on input line 844
+.
+(pdftex.def)             Requested size: 394.35236pt x 203.20386pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[28 <./report_images/sq1.png> <./report_images/sq2.png>]
+<report_images/nightly.png, id=545, 324.21124pt x 366.36874pt>
+File: report_images/nightly.png Graphic file (type png)
+<use report_images/nightly.png>
+Package pdftex.def Info: report_images/nightly.png  used on input line 873.
+(pdftex.def)             Requested size: 306.71924pt x 346.62279pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[29 <./report_images/sq_artifacts.png>]
+<report_images/semgrep.png, id=553, 295.1025pt x 403.5075pt>
+File: report_images/semgrep.png Graphic file (type png)
+<use report_images/semgrep.png>
+Package pdftex.def Info: report_images/semgrep.png  used on input line 881.
+(pdftex.def)             Requested size: 197.17618pt x 269.60977pt.
+<report_images/code_ql.png, id=554, 925.4575pt x 217.81375pt>
+File: report_images/code_ql.png Graphic file (type png)
+<use report_images/code_ql.png>
+Package pdftex.def Info: report_images/code_ql.png  used on input line 886.
+(pdftex.def)             Requested size: 227.85144pt x 53.62573pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[30 <./report_images/nightly.png>]
+<report_images/trivy.png, id=562, 513.92pt x 663.47874pt>
+File: report_images/trivy.png Graphic file (type png)
+<use report_images/trivy.png>
+Package pdftex.def Info: report_images/trivy.png  used on input line 893.
+(pdftex.def)             Requested size: 350.53915pt x 452.55666pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[31 <./report_images/semgrep.png> <./report_images/code_ql.png>]
+<report_images/sq4.png, id=570, 884.30376pt x 487.8225pt>
+File: report_images/sq4.png Graphic file (type png)
+<use report_images/sq4.png>
+Package pdftex.def Info: report_images/sq4.png  used on input line 899.
+(pdftex.def)             Requested size: 438.17227pt x 241.7148pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[32 <./report_images/trivy.png>]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[33 <./report_images/sq4.png>]
 Chapter 3.
 
 
-[26
+[34
 
 ]
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[27]
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[28]
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[29]
-Chapter 4.
-
-Overfull \hbox (17.0618pt too wide) in paragraph at lines 974--976
-[]\T1/lmr/m/n/12 (-20) User opens the app. \T1/lmtt/m/n/12 keycloak.init({onLoa
-d: 'login-required', pkceMethod:
- []
-
-
-
-[30
-
-]
-Overfull \hbox (23.01797pt too wide) in paragraph at lines 992--993
-[]\T1/lmr/m/n/12 (-20) The fron-tend calls \T1/lmtt/m/n/12 keycloak.logout({red
-irectUri: window.location.origin})\T1/lmr/m/n/12 (-20) . 
- []
-
-
-Overfull \hbox (26.44984pt too wide) in paragraph at lines 1001--1003
-[]\T1/lmr/m/n/12 (-20) Before ev-ery API re-quest, \T1/lmtt/m/n/12 httpConsumer
-.js \T1/lmr/m/n/12 (-20) calls \T1/lmtt/m/n/12 await keycloak.updateToken(30)\T
-1/lmr/m/n/12 (-20) . 
- []
-
-
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[31]
-Overfull \hbox (149.816pt too wide) in paragraph at lines 1051--1055
-[]\T1/lmr/m/n/12 (-20) Every con-troller method is an-no-tated with \T1/lmtt/m/
-n/12 @PreAuthorize("@perms.canAnyRole(authentication,
- []
-
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.95> on input line 1065.
-
-Overfull \hbox (137.97758pt too wide) in paragraph at lines 1079--1083
-[]\T1/lmr/m/n/12 (-20) The \T1/lmtt/m/n/12 PermissionsConfig \T1/lmr/m/n/12 (-2
-0) class is an-no-tated with \T1/lmtt/m/n/12 @Component("perms") \T1/lmr/m/n/12
- (-20) and \T1/lmtt/m/n/12 @ConfigurationProperties(prefix
- []
-
-
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[32]
-Overfull \hbox (85.18959pt too wide) in paragraph at lines 1150--1150
-\T1/lmr/m/n/12 (-20) (\T1/lmtt/m/n/12 server.tomcat.max-http-form-post-size\T1/
-lmr/m/n/12 (-20) , 
- []
-
-
-Overfull \hbox (112.89755pt too wide) in paragraph at lines 1150--1150
-\T1/lmtt/m/n/12 spring.servlet.multipart.max-request-size\T1/lmr/m/n/12 (-20) )
-.|  
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1156--1156
-\T1/lmr/m/n/12 (+20) and 
- []
-
-
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[33]
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[34]
-Underfull \hbox (badness 10000) in paragraph at lines 1202--1202
-[]|\T1/lmtt/m/n/12 PermissionsConfig
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1202--1202
-\T1/lmr/m/n/12 (+20) (\T1/lmtt/m/n/12 @Component("perms")\T1/lmr/m/n/12 (+20) )
- eval-u-ates the
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1202--1202
-\T1/lmr/m/n/12 (+20) caller's granted au-thor-i-ties against
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1202--1202
-\T1/lmr/m/n/12 (+20) the per-mis-sions ma-trix loaded from
- []
-
+<report_images/DAST.png, id=587, 633.36626pt x 988.69376pt>
+File: report_images/DAST.png Graphic file (type png)
+<use report_images/DAST.png>
+Package pdftex.def Info: report_images/DAST.png  used on input line 972.
+(pdftex.def)             Requested size: 315.48456pt x 492.49007pt.
 
 
 
@@ -1354,29 +1171,6 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
 [35]
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1207--1212
- [] [] [] [] 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1212--1217
- [] [] [] [] 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1217--1219
- [] [] [] [] 
- []
-
-
-Underfull \hbox (badness 1776) in paragraph at lines 1235--1235
-[]|\T1/lmr/m/n/12 (+20) The per-mis-sions ma-trix in 
- []
-
-
-Overfull \hbox (2.47537pt too wide) in alignment at lines 1219--1248
- [] [] [] [] 
- []
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1385,26 +1179,206 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[36]
-Underfull \hbox (badness 1360) in paragraph at lines 1283--1283
-\T1/lmr/m/n/12 (+20) then-ti-cated enu-mer-a-tion. 
+[36 <./report_images/DAST.png>]
+<report_images/Zap.png, id=600, 1307.88625pt x 696.6025pt>
+File: report_images/Zap.png Graphic file (type png)
+<use report_images/Zap.png>
+Package pdftex.def Info: report_images/Zap.png  used on input line 1019.
+(pdftex.def)             Requested size: 438.17227pt x 233.37657pt.
+<report_images/alert_detail_zap.png, id=601, 1307.88625pt x 624.3325pt>
+File: report_images/alert_detail_zap.png Graphic file (type png)
+<use report_images/alert_detail_zap.png>
+Package pdftex.def Info: report_images/alert_detail_zap.png  used on input line
+ 1025.
+(pdftex.def)             Requested size: 438.17227pt x 209.16458pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[37 <./report_images/Zap.png>]
+<report_images/DAST_ZAP_2.png, id=610, 519.9425pt x 476.78125pt>
+File: report_images/DAST_ZAP_2.png Graphic file (type png)
+<use report_images/DAST_ZAP_2.png>
+Package pdftex.def Info: report_images/DAST_ZAP_2.png  used on input line 1031.
+
+(pdftex.def)             Requested size: 315.48456pt x 289.29381pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[38 <./report_images/alert_detail_zap.png> <./report_images/DAST_ZAP_2.png>]
+<report_images/nightly_zap_2.png, id=619, 1443.3925pt x 618.31pt>
+File: report_images/nightly_zap_2.png Graphic file (type png)
+<use report_images/nightly_zap_2.png>
+Package pdftex.def Info: report_images/nightly_zap_2.png  used on input line 10
+75.
+(pdftex.def)             Requested size: 438.17227pt x 187.70213pt.
+<report_images/nightly_zap.png, id=620, 1386.17876pt x 246.9225pt>
+File: report_images/nightly_zap.png Graphic file (type png)
+<use report_images/nightly_zap.png>
+Package pdftex.def Info: report_images/nightly_zap.png  used on input line 1081
+.
+(pdftex.def)             Requested size: 438.17227pt x 78.05226pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[39 <./report_images/nightly_zap_2.png> <./report_images/nightly_zap.png>]
+Chapter 4.
+
+
+[40
+
+]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[41]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 1214.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[42]
+Overfull \hbox (1.56624pt too wide) in paragraph at lines 1281--1281
+[]|\T1/lmr/bx/n/12 (-20) Item|  
  []
 
 
-Underfull \hbox (badness 1320) in paragraph at lines 1287--1287
-\T1/lmr/m/n/12 (+20) re-quire a valid JWT and 
+Overfull \hbox (1.56624pt too wide) in paragraph at lines 1286--1286
+[]|\T1/lmr/bx/n/12 (-20) Item|  
  []
 
 
-Overfull \hbox (5.55594pt too wide) in paragraph at lines 1287--1287
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1292--1292
+[]|\T1/lmr/m/n/12 (-20) API1|  
+ []
+
+
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1295--1295
+[]|\T1/lmr/m/n/12 (-20) API3|  
+ []
+
+
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1298--1298
+[]|\T1/lmr/m/n/12 (-20) API4|  
+ []
+
+
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1301--1301
+[]|\T1/lmr/m/n/12 (-20) API5|  
+ []
+
+
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1304--1304
+[]|\T1/lmr/m/n/12 (-20) API8|  
+ []
+
+
+Overfull \hbox (0.77084pt too wide) in paragraph at lines 1307--1307
+[]|\T1/lmr/m/n/12 (-20) API9|  
+ []
+
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[43]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[44]
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1356--1361
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1361--1366
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1366--1368
+ [] [] [] [] 
+ []
+
+
+Overfull \hbox (2.47537pt too wide) in alignment at lines 1368--1397
+ [] [] [] [] 
+ []
+
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[45]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[46]
+Overfull \hbox (5.55594pt too wide) in paragraph at lines 1436--1436
 \T1/lmtt/m/n/12 /api/appointments?patientName=X 
  []
 
 
-Underfull \hbox (badness 2111) in paragraph at lines 1291--1291
-\T1/lmr/m/n/12 (+20) re-quires UP-DATE role. 
- []
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
+[47]
+<images/01_regression.png, id=686, 1204.5pt x 1077.02374pt>
+File: images/01_regression.png Graphic file (type png)
+<use images/01_regression.png>
+Package pdftex.def Info: images/01_regression.png  used on input line 1461.
+(pdftex.def)             Requested size: 438.17227pt x 391.8039pt.
 
 
 
@@ -1414,24 +1388,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[37]
+[48]
+<images/02_regression.png, id=692, 1204.5pt x 997.7275pt>
+File: images/02_regression.png Graphic file (type png)
+<use images/02_regression.png>
+Package pdftex.def Info: images/02_regression.png  used on input line 1467.
+(pdftex.def)             Requested size: 438.17227pt x 362.95718pt.
 
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[38]
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 13.59999pt, for example:
-(fancyhdr)                \setlength{\headheight}{13.59999pt}.
-(fancyhdr)                You might also make \topmargin smaller:
-(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
-
-[39]
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1440,20 +1403,113 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
 
-[40] (./report.aux)
+[49 <./images/01_regression.png (PNG copy)>]
+<images/03_regression.png, id=698, 1204.5pt x 1008.76875pt>
+File: images/03_regression.png Graphic file (type png)
+<use images/03_regression.png>
+Package pdftex.def Info: images/03_regression.png  used on input line 1473.
+(pdftex.def)             Requested size: 438.17227pt x 366.97383pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[50 <./images/02_regression.png (PNG copy)>]
+<images/04_regression.png, id=705, 1204.5pt x 1007.765pt>
+File: images/04_regression.png Graphic file (type png)
+<use images/04_regression.png>
+Package pdftex.def Info: images/04_regression.png  used on input line 1479.
+(pdftex.def)             Requested size: 438.17227pt x 366.60867pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[51 <./images/03_regression.png (PNG copy)>]
+<images/05_regression.png, id=711, 1204.5pt x 1020.81375pt>
+File: images/05_regression.png Graphic file (type png)
+<use images/05_regression.png>
+Package pdftex.def Info: images/05_regression.png  used on input line 1485.
+(pdftex.def)             Requested size: 438.17227pt x 371.3556pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[52 <./images/04_regression.png (PNG copy)>]
+<images/06_regression.png, id=717, 1204.5pt x 970.62625pt>
+File: images/06_regression.png Graphic file (type png)
+<use images/06_regression.png>
+Package pdftex.def Info: images/06_regression.png  used on input line 1491.
+(pdftex.def)             Requested size: 438.17227pt x 353.0982pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[53 <./images/05_regression.png (PNG copy)>]
+<images/07_regression.png, id=723, 1204.5pt x 1009.7725pt>
+File: images/07_regression.png Graphic file (type png)
+<use images/07_regression.png>
+Package pdftex.def Info: images/07_regression.png  used on input line 1497.
+(pdftex.def)             Requested size: 438.17227pt x 367.33897pt.
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[54 <./images/06_regression.png (PNG copy)>]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[55 <./images/07_regression.png (PNG copy)>]
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 13.59999pt, for example:
+(fancyhdr)                \setlength{\headheight}{13.59999pt}.
+(fancyhdr)                You might also make \topmargin smaller:
+(fancyhdr)                \addtolength{\topmargin}{-1.59999pt}.
+
+[56] (./report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: 9A0153C4084627C2645C08F140FB99AB;10772.
+(rerunfilecheck)             Checksum: 1E442B976FCEE0A2176151055C79EAD6;10932.
  ) 
 Here is how much of TeX's memory you used:
- 16251 strings out of 475085
- 267050 string characters out of 5764176
- 728290 words of memory out of 5000000
- 38703 multiletter control sequences out of 15000+600000
- 629607 words of font info for 156 fonts, out of 8000000 for 9000
+ 16525 strings out of 475085
+ 274297 string characters out of 5764176
+ 726304 words of memory out of 5000000
+ 38924 multiletter control sequences out of 15000+600000
+ 629573 words of font info for 158 fonts, out of 8000000 for 9000
  61 hyphenation exceptions out of 8191
  75i,13n,79p,1195b,620s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/fonts/ty
@@ -1462,12 +1518,11 @@ r/share/texmf/fonts/type1/public/lm/lmr12.pfb></usr/share/texmf/fonts/type1/pub
 lic/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/t
 exmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/l
 mri12.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/
-fonts/type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt12
-.pfb>
-Output written on report.pdf (41 pages, 2445300 bytes).
+fonts/type1/public/lm/lmtt12.pfb>
+Output written on report.pdf (57 pages, 5056039 bytes).
 PDF statistics:
- 693 PDF objects out of 1000 (max. 8388607)
- 601 compressed objects within 7 object streams
- 171 named destinations out of 1000 (max. 500000)
- 40522 words of extra memory for PDF output out of 42996 (max. 10000000)
+ 846 PDF objects out of 1000 (max. 8388607)
+ 697 compressed objects within 7 object streams
+ 219 named destinations out of 1000 (max. 500000)
+ 40143 words of extra memory for PDF output out of 42996 (max. 10000000)
 
