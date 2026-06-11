@@ -22,6 +22,11 @@
 \usepackage{multirow}
 \usepackage{lmodern}
 \usepackage{ragged2e}
+\PassOptionsToPackage{hyphens}{url}
+
+% ── Allow extra inter-word stretch to avoid hbox overflows ────────────────────
+\setlength{\emergencystretch}{3em}
+\hbadness=10000
 
 % ── Page geometry ─────────────────────────────────────────────────────────────
 \geometry{top=2.5cm, bottom=2.5cm, left=2.8cm, right=2.8cm}
@@ -190,6 +195,12 @@ Orchestration & Docker Compose                                & Host only \\
   \item[\textbf{TB-3: JPA/JDBC Boundary}] The backend connects to PostgreSQL with a single read/write account and no row-level security.
 \end{description}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.40\linewidth]{assets.png}
+  \caption{System trust boundary stack (TB-1 to TB-3)}
+\end{figure}
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Data Flow Diagrams}
 % ─────────────────────────────────────────────────────────────────────────────
@@ -302,12 +313,12 @@ Non-compliance & \high & Structural GDPR violations applicable to health data ex
 \begin{table}[H]
 \centering
 \caption{Spoofing threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
 S-01 & Any user can impersonate any clinic staff member -- \textbf{no authentication exists}. & Backend API & \critical & No Spring Security configuration or auth middleware is present anywhere in the stack. \\[6pt]
-S-02 & Attacker can forge \texttt{patientId} query parameter to create appointments under any patient. & POST /api/\allowbreak appointments & \high & \texttt{AppointmentController.create()} accepts \texttt{patientId} from the request. \texttt{AppointmentService.create()} trusts it after \texttt{findById()}. \\
+S-02 & Attacker can forge \texttt{patientId} query parameter to create appointments under any patient. & Appointment API & \high & The controller accepts \texttt{patientId} from the request and the service trusts it after \texttt{findById()}. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -317,15 +328,15 @@ S-02 & Attacker can forge \texttt{patientId} query parameter to create appointme
 \begin{table}[H]
 \centering
 \caption{Tampering threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
-T-01 & Any unauthenticated user can PUT to \texttt{/api/appointments/\{id\}} and change patient linkage, date, status, or specialty. & Appointment API & \critical & \texttt{AppointmentService.update()} updates all mutable fields and can swap the linked patient. \\[6pt]
-T-02 & Any unauthenticated user can PUT to \texttt{/api/patients/\{id\}} and modify patient PII. & Patient API & \critical & \texttt{PatientService.update()} directly replaces name, dateOfBirth, phoneNumber, and email. \\[6pt]
+T-01 & Any unauthenticated user can PUT to \texttt{/api/\allowbreak{}appointments/\allowbreak{}\{id\}} and change patient linkage, date, status, or specialty. & Appointment API & \critical & The appointment update service updates all mutable fields and can silently swap the linked patient. \\[6pt]
+T-02 & Any unauthenticated user can PUT to \texttt{/api/\allowbreak{}patients/\allowbreak{}\{id\}} and modify patient PII. & Patient API & \critical & The patient update service directly replaces name, date of birth, phone number, and email. \\[6pt]
 T-03 & Direct entity binding accepts nested relationship data from clients. & Backend (no DTOs) & \medium & Controllers deserialise directly into JPA entities instead of constrained request DTOs. \\[6pt]
-T-04 & SPECIALTIES and STATUSES not validated server-side -- arbitrary strings can be persisted. & Appointment entity & \medium & \texttt{specialty} and \texttt{status} are plain Strings with no enum or bean validation. \\[6pt]
-T-05 & Email field has no uniqueness constraint enforced by the application. & Patient API & \medium & \texttt{findByEmail()} exists in the repository but is not used during create or update flows. \\
+T-04 & SPECIALTIES and STATUSES not validated server-side -- arbitrary strings can be persisted. & Appointment entity & \medium & \texttt{specialty} and \texttt{status} are plain String fields with no enum or bean validation. \\[6pt]
+T-05 & Email field has no uniqueness constraint enforced by the application. & Patient API & \medium & \texttt{findByEmail()} exists in the repository but is unused during create or update flows. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -335,7 +346,7 @@ T-05 & Email field has no uniqueness constraint enforced by the application. & P
 \begin{table}[H]
 \centering
 \caption{Repudiation threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
@@ -351,7 +362,7 @@ R-03 & Cascade delete on Patient removes all linked appointments with no log or 
 \begin{table}[H]
 \centering
 \caption{Information Disclosure threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
@@ -370,12 +381,12 @@ I-06 & Backend port 8080 may be directly accessible, bypassing the Vite proxy. &
 \begin{table}[H]
 \centering
 \caption{Denial of Service threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
 D-01 & No rate limiting -- attacker can flood \texttt{POST /api/appointments} to exhaust DB connections. & Backend API & \high & No throttling, quota, or back-pressure mechanism at any layer. \\[6pt]
-D-02 & No pagination on \texttt{GET /api/appointments} -- large result sets can exhaust memory. & Appointment search & \medium & \texttt{appointmentRepository.findAll(spec)} returns the full matching set in memory. \\[6pt]
+D-02 & No pagination on \texttt{GET /api/appointments} -- large result sets can exhaust memory. & Appointment search & \medium & The appointment repository returns the full matching set in memory with no page limit. \\[6pt]
 D-03 & \texttt{DELETE /api/patients/\{id\}} cascades to all appointments -- one request can delete hundreds of records. & Patient delete & \high & A single patient deletion removes the parent record and all dependent appointments. \\
 \bottomrule
 \end{tabularx}
@@ -386,13 +397,13 @@ D-03 & \texttt{DELETE /api/patients/\{id\}} cascades to all appointments -- one 
 \begin{table}[H]
 \centering
 \caption{Elevation of Privilege threats}
-\begin{tabularx}{\linewidth}{S{0.8cm} S{3.5cm} S{2.6cm} S{1.7cm} X}
+\begin{tabularx}{\linewidth}{S{0.8cm} S{3.2cm} S{2.4cm} S{2.1cm} X}
 \toprule
 \textbf{ID} & \textbf{Threat} & \textbf{Component} & \textbf{Severity} & \textbf{Detail} \\
 \midrule
 E-01 & No roles or permissions -- all API operations are equally accessible to any caller. & Entire backend & \critical & No RBAC, ownership check, or record-level authorisation anywhere in the backend. \\[6pt]
 E-02 & Client-controlled nested objects can influence backend relationships during updates. & Backend (no DTOs) & \high & The update flow trusts nested \texttt{patient.id} in request bodies to change appointment ownership. \\[6pt]
-E-03 & \texttt{PUT /api/appointments/\{id\}} re-assigns patient -- allows transferring medical records between patients. & Appointment service & \high & \texttt{AppointmentService.update()} resolves the provided patient ID and rebinds the appointment if found. \\
+E-03 & \texttt{PUT /api/\allowbreak{}appointments/\allowbreak{}\{id\}} re-assigns patient -- allows transferring medical records between patients. & Appointment service & \high & The update service resolves the provided patient ID and rebinds the appointment to a different patient if found. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -406,68 +417,100 @@ Privacy and security threats were identified using the LINDDUN framework, suited
 \textbf{LINDDUN categories used:} Linking $\cdot$ Identifying $\cdot$ Non-repudiation $\cdot$ Detecting $\cdot$ Disclosure $\cdot$ Unawareness $\cdot$ Non-compliance.
 
 \subsection*{AS-01 -- Unauthorised Access to Patient Data}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Disclosure -- \critical
-  \item[Abuse Case] As a malicious external user, I want to access another patient's personal data so that I can obtain sensitive information such as name, email, phone number, date of birth, and linked appointment data.
-  \item[How] The attacker sends direct requests to \texttt{/api/patients} and \texttt{/api/appointments} and retrieves records without any access control, as no authentication mechanism exists in the system.
-  \item[Impact] Exposure of personal and appointment-related data, leading to a privacy breach.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Disclosure -- \critical \\\midrule
+Abuse Case & As a malicious external user, I want to access another patient's personal data so that I can obtain sensitive information such as name, email, phone number, date of birth, and linked appointment data. \\\midrule
+How        & The attacker sends direct requests to \texttt{/api/patients} and \texttt{/api/\allowbreak{}appointments} and retrieves records without any access control, as no authentication mechanism exists in the system. \\\midrule
+Impact     & Exposure of personal and appointment-related data, leading to a privacy breach. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-02 -- Link Patient Identity to Appointment History}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Linking -- \critical
-  \item[Abuse Case] As a malicious external user, I want to associate patient identity data with appointment records so that I can infer sensitive patterns such as recurring specialties and possible health-related conditions.
-  \item[How] The attacker correlates the full patient list with appointment records through linked identifiers. Both endpoints are unauthenticated and return all records without pagination, making full profiling possible in two requests.
-  \item[Impact] Sensitive health patterns can be inferred from metadata alone, increasing patient profiling risk beyond what any single record reveals.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Linking -- \critical \\\midrule
+Abuse Case & As a malicious external user, I want to associate patient identity data with appointment records so that I can infer sensitive patterns such as recurring specialties and possible health-related conditions. \\\midrule
+How        & The attacker correlates the full patient list with appointment records through linked identifiers. Both endpoints are unauthenticated and return all records without pagination, making full profiling possible in two requests. \\\midrule
+Impact     & Sensitive health patterns can be inferred from metadata alone, increasing patient profiling risk beyond what any single record reveals. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-03 -- Directly Identify a Patient from Stored Records}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Identifying -- \critical
-  \item[Abuse Case] As a malicious external user, I want to use personal identifiers stored in the system so that I can directly identify a patient and associate their appointment information with a real individual.
-  \item[How] The attacker accesses records containing direct identifiers (name, email, phone, date of birth). Patient IDs are sequential integers starting at 1, making full enumeration via \texttt{/api/patients/\{id\}} trivial with no rate limiting or authentication.
-  \item[Impact] A real individual can be directly identified and their full appointment history retrieved.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Identifying -- \critical \\\midrule
+Abuse Case & As a malicious external user, I want to use personal identifiers stored in the system so that I can directly identify a patient and associate their appointment information with a real individual. \\\midrule
+How        & The attacker accesses records containing direct identifiers (name, email, phone, date of birth). Patient IDs are sequential integers starting at 1, making full enumeration via \texttt{/api/patients/\{id\}} trivial with no rate limiting or authentication. \\\midrule
+Impact     & A real individual can be directly identified and their full appointment history retrieved. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-04 -- Infer a Patient's Health Condition from Appointment Metadata}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Detecting -- \critical
-  \item[Abuse Case] As a malicious external user, I want to observe the specialty and status fields of a patient's appointments so that I can infer sensitive health information without ever accessing a medical record directly.
-  \item[How] The attacker filters \texttt{GET /api/appointments?patientName=X} to retrieve the full appointment history. Repeated ``Psychiatry'' visits with status ``NO\_SHOW'' reveal sensitive patterns without any explicit diagnosis data.
-  \item[Impact] Sensitive health conditions may be inferred from observable metadata, constituting a privacy violation.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Detecting -- \critical \\\midrule
+Abuse Case & As a malicious external user, I want to observe the specialty and status fields of a patient's appointments so that I can infer sensitive health information without ever accessing a medical record directly. \\\midrule
+How        & The attacker filters \texttt{GET /api/\allowbreak{}appointments?patientName=X} to retrieve the full appointment history. Repeated ``Psychiatry'' visits with status \texttt{NO\_SHOW} reveal sensitive patterns without any explicit diagnosis data. \\\midrule
+Impact     & Sensitive health conditions may be inferred from observable metadata, constituting a privacy violation. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-05 -- Modify or Reassign Patient Appointment Records}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Disclosure -- \high
-  \item[Abuse Case] As a malicious external user, I want to change the date, status, specialty, or linked patient of an appointment so that I can corrupt legitimate medical records.
-  \item[How] The attacker sends an unauthenticated PUT request to \texttt{/api/appointments/\{id\}}. Including \texttt{"patient": \{"id": X\}} in the body causes the service to silently reassign the appointment to a different patient, with no authorisation check, no validation, and no audit log.
-  \item[Impact] Medical records may be altered or linked to the wrong patient, directly affecting clinical integrity and patient safety.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Disclosure -- \high \\\midrule
+Abuse Case & As a malicious external user, I want to change the date, status, specialty, or linked patient of an appointment so that I can corrupt legitimate medical records. \\\midrule
+How        & The attacker sends an unauthenticated PUT to \texttt{/api/appointments/\{id\}}. Including \verb|{"patient":{"id":X}}| in the body causes the service to silently reassign the appointment to a different patient, with no authorisation check or audit log. \\\midrule
+Impact     & Medical records may be altered or linked to the wrong patient, directly affecting clinical integrity and patient safety. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-06 -- Destroy Patient Records Through Cascade Deletion}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Non-Compliance -- \critical
-  \item[Abuse Case] As a malicious external user, I want to remove patient records so that I can cause irreversible data loss and disrupt normal clinical operation.
-  \item[How] The attacker sends unauthenticated DELETE requests to \texttt{/api/patients/\{id\}}. Due to cascade deletion (\texttt{orphanRemoval = true}), every linked appointment is also permanently destroyed. IDs are sequential, so iterating from 1 to N wipes the entire database. No confirmation, audit log, or recovery path exists.
-  \item[Impact] All patient PII and linked appointment history is permanently lost with no recovery mechanism. The clinic cannot detect, investigate, or report the incident.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Non-Compliance -- \critical \\\midrule
+Abuse Case & As a malicious external user, I want to remove patient records so that I can cause irreversible data loss and disrupt normal clinical operation. \\\midrule
+How        & The attacker sends unauthenticated DELETE requests to \texttt{/api/\allowbreak{}patients/\allowbreak{}\{id\}}. Due to cascade deletion (\texttt{orphanRemoval\allowbreak{}=\allowbreak{}true}), every linked appointment is also permanently destroyed. Sequential IDs allow iterating from 1 to N to wipe the entire database, with no confirmation, audit log, or recovery path. \\\midrule
+Impact     & All patient PII and linked appointment history is permanently lost with no recovery mechanism. The clinic cannot detect, investigate, or report the incident. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-07 -- Perform Undetectable Actions Due to Absence of Audit Logging}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Non-repudiation -- \critical
-  \item[Abuse Case] As a malicious internal user or external attacker, I want to create, modify, or delete patient and appointment records so that my actions leave no trace and cannot be attributed to me.
-  \item[How] The system has no authentication, no audit log, and no access log at any layer. Any CRUD operation on any record is permanently undetectable once performed.
-  \item[Impact] Malicious or accidental changes cannot be investigated or attributed. The clinic cannot comply with GDPR.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Non-repudiation -- \critical \\\midrule
+Abuse Case & As a malicious internal user or external attacker, I want to create, modify, or delete patient and appointment records so that my actions leave no trace and cannot be attributed to me. \\\midrule
+How        & The system has no authentication, no audit log, and no access log at any layer. Any CRUD operation on any record is permanently undetectable once performed. \\\midrule
+Impact     & Malicious or accidental changes cannot be investigated or attributed. The clinic cannot comply with GDPR. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection*{AS-08 -- Overload the API with Repeated Requests}
-\begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[LINDDUN] Non-compliance -- \high
-  \item[Abuse Case] As an attacker, I want to flood patient and appointment endpoints with repeated requests so that I can make the system slow or unavailable for legitimate users.
-  \item[How] The attacker automates repeated API requests. No rate limiting exists, and \texttt{GET /api/appointments} with no filters triggers a full table scan with no pagination, exhausting the HikariCP connection pool ($\sim$10 connections default).
-  \item[Impact] The system becomes slow or unavailable for normal clinical use.
-\end{description}
+\begin{table}[H]
+\begin{tabularx}{\linewidth}{>{\bfseries\RaggedRight\arraybackslash}p{2.6cm} X}
+\toprule
+LINDDUN   & Non-compliance -- \high \\\midrule
+Abuse Case & As an attacker, I want to flood patient and appointment endpoints with repeated requests so that I can make the system slow or unavailable for legitimate users. \\\midrule
+How        & The attacker automates repeated API requests. No rate limiting exists, and \texttt{GET /api/\allowbreak{}appointments} with no filters triggers a full table scan with no pagination, exhausting the HikariCP connection pool ($\sim$10 connections default). \\\midrule
+Impact     & The system becomes slow or unavailable for normal clinical use. \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Attack Trees}
@@ -737,6 +780,12 @@ Runs through \texttt{sast-nightly.yml}. Performs:
 
 The pre-commit hook was executed successfully via \texttt{pre-commit run --all-files}. Both Gitleaks and Semgrep passed with no blocking findings, confirming no secrets or high-severity patterns in the staged codebase.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.80\linewidth]{precommit_config.png}
+  \caption{Pre-commit hook configuration (\texttt{.pre-commit-config.yaml}) -- Gitleaks v8.30.1 and Semgrep v1.145.0}
+\end{figure}
+
 \subsection{Pull Request Results}
 
 \begin{table}[H]
@@ -757,12 +806,44 @@ SonarQube       & Passed & 0 bugs, 0 vulnerabilities, 0 hotspots \\
 
 \textbf{Non-blocking advisory findings:}
 \begin{itemize}
-  \item \textbf{Semgrep (medium)} -- dynamic URL used with \texttt{urllib} in \texttt{.github/scripts/build\_sonarqube\_pr\_comment.py:24}.
-  \item \textbf{ESLint (2 warnings)} -- Generic Object Injection Sink in \texttt{AppointmentsPanel.jsx:145} and \texttt{clinicOptions.js:32}.
+  \item \textbf{Semgrep (medium)} -- dynamic URL used with \texttt{urllib} in \path{.github/scripts/build_sonarqube_pr_comment.py} (line 24).
+  \item \textbf{ESLint (2 warnings)} -- Generic Object Injection Sink in \path{src/frontend/src/components/AppointmentsPanel.jsx}:145 and \path{src/frontend/src/constants/clinicOptions.js}:32.
   \item \textbf{Trivy (2 low)} -- Missing HEALTHCHECK instruction in both Dockerfiles (DS-0026).
 \end{itemize}
 
 SonarQube passed with no bugs, vulnerabilities, or security hotspots detected in the new code.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth]{workflow_pr.png}
+  \caption{GitHub Actions PR workflow -- all jobs passed (Gitleaks 7s, Semgrep 22s, ESLint 11s, Trivy 1m1s, SonarQube 2m55s)}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{sast_tools.png}
+  \caption{SAST Security Summary PR comment -- advisory findings per tool}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{sq1.png}
+    \caption{SonarQube Analysis Report -- Quality Gate: Passed (new code metrics)}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{sq2.png}
+    \caption{SonarQube -- Overall Project metrics (2938 LoC, 89 code smells)}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth]{sq_artifacts.png}
+  \caption{PR artifacts -- reports uploaded by the SAST pipeline per tool}
+\end{figure}
 
 \subsection{Nightly Results}
 
@@ -786,6 +867,38 @@ Frontend & Failed & libcrypto3 CVE-2025-15467 (CRITICAL), libssl3, libc6, and mu
 \end{table}
 
 The nightly level confirms the value of deeper scheduled analysis: even though pre-commit and PR stages passed, Trivy image scanning detected significant vulnerabilities in the container image layers that were not visible at static code level.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.70\linewidth]{nightly.png}
+  \caption{Nightly SAST workflow -- Semgrep (29s), Trivy Image Scan (3m16s), CodeQL Java-Kotlin (1m43s), CodeQL JavaScript (1m5s)}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.45\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{semgrep.png}
+    \caption{Semgrep Nightly Summary -- Status: Passed, 0 findings}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.52\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{code_ql.png}
+    \caption{CodeQL scanned files -- GitHub Actions 100\%, Java 91\%, JavaScript 100\%}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.80\linewidth]{trivy.png}
+  \caption{Trivy Image Scan Results -- Backend (HIGH: tomcat-embed-core CVE-2025-24734) and Frontend (CRITICAL: libcrypto3 CVE-2025-15467 and multiple HIGH CVEs)}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{sq4.png}
+  \caption{GitHub Security tab -- open alerts detected by Trivy (HIGH, pom.xml and Dockerfiles) and Semgrep (errors)}
+\end{figure}
 
 % ══════════════════════════════════════════════════════════════════════════════
 \chapter{Dynamic Application Security Testing (DAST)}
@@ -854,6 +967,12 @@ Both workflows use \textbf{OWASP ZAP Baseline}. The application is launched insi
 
 The DAST workflow completed successfully. The gate passed because no \textbf{High} severity ZAP findings were detected.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\linewidth]{DAST.png}
+  \caption{DAST PR scan summary comment -- no High findings; gate status: Passed}
+\end{figure}
+
 \begin{table}[H]
 \centering
 \caption{DAST Scan Summary -- PR level}
@@ -895,6 +1014,24 @@ Modern Web Application                       & Informational & 8 \\
 \end{tabularx}
 \end{table}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Zap.png}
+  \caption{ZAP Scanning Report (HTML) -- PR run, generated Mon 30 Mar 2026}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{alert_detail_zap.png}
+  \caption{ZAP Alert Detail -- Content Security Policy (CSP) Header Not Set (Medium, 4 instances)}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.72\linewidth]{DAST_ZAP_2.png}
+  \caption{DAST alert types summary -- latest PR scan (4 alert types, High: 0)}
+\end{figure}
+
 \subsection{Nightly Results}
 
 The nightly DAST workflow built and launched the full stack inside Docker and ran OWASP ZAP Baseline against the running frontend.
@@ -933,6 +1070,17 @@ Modern Web Application                       & Informational & 5 \\
 
 The nightly results confirm the same top findings as the PR scan. No High severity findings were detected in either run. The nightly level provides a recurring view of the runtime security posture of the project even when no pull request is being reviewed.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{nightly_zap_2.png}
+  \caption{Nightly ZAP Scanning Report (HTML) -- Local OWASP ZAP scan, generated Tue 31 Mar 2026}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{nightly_zap.png}
+  \caption{Nightly ZAP Summary of Sequences -- alert breakdown: Medium (CSP, Anti-clickjacking), Low (X-Content-Type), Informational (Modern Web App)}
+\end{figure}
 
 % ══════════════════════════════════════════════════════════════════════════════
 \chapter{Part 2 -- Security Fixes \& Architecture}
@@ -989,7 +1137,7 @@ a signed JWT (RS256) fetched from the Keycloak JWKS endpoint.
 
 \begin{enumerate}
   \item The user clicks the \textbf{Logout} button in the top navigation bar.
-  \item The frontend calls \texttt{keycloak.logout(\{redirectUri: window.location.origin\})}.
+  \item The frontend calls \path{keycloak.logout()} with a \texttt{redirectUri} set to the current application origin.
   \item Keycloak invalidates the session server-side (back-channel logout), clears the SSO
         cookie, and redirects the browser back to the application origin.
   \item The app re-enters \texttt{keycloak.init()} and redirects to the Keycloak login page.
@@ -998,8 +1146,8 @@ a signed JWT (RS256) fetched from the Keycloak JWKS endpoint.
 \subsubsection{Token Refresh Flow}
 
 \begin{enumerate}
-  \item Before every API request, \texttt{httpConsumer.js} calls
-        \texttt{await keycloak.updateToken(30)}.
+  \item Before every API request, \path{httpConsumer.js} calls
+        \texttt{await keycloak.\allowbreak{}updateToken(30)}.
   \item If the access token expires within 30 seconds, \texttt{keycloak-js} sends the refresh
         token to Keycloak's token endpoint and obtains a new access token silently.
   \item If the refresh token is also expired, \texttt{keycloak.login()} is called, redirecting
@@ -1049,9 +1197,10 @@ Role-Based Access Control is implemented at two layers:
     \texttt{/api/**} routes and uses \texttt{anyRequest().denyAll()} as the catch-all
     (deny-by-default). No unauthenticated request reaches a controller.
   \item[\textbf{Method-level}] Every controller method is annotated with
-    \texttt{@PreAuthorize("@perms.canAnyRole(authentication, '<resource>', '<action>')")}.
-    The \texttt{@perms} bean ({\small\texttt{PermissionsConfig}}) checks the caller's
-    granted authorities against the permissions matrix loaded from \texttt{application.yml}.
+    \texttt{@PreAuthorize} referencing the \texttt{@perms} bean:
+    \texttt{@perms.canAnyRole(authentication,\allowbreak{} '<resource>',\allowbreak{} '<action>')}.
+    The bean checks the caller's granted authorities against the permissions matrix
+    loaded from \texttt{application.yml}.
 \end{description}
 
 \subsection{Permissions as Data}
@@ -1126,7 +1275,7 @@ is lazy and the \texttt{jwt()} post-processor bypasses token validation.
 Each control below is traceable to an OWASP API Security item and to the corresponding
 commit on the \texttt{develop} branch.
 
-\begin{longtable}{S{1.0cm} S{2.2cm} S{5.2cm} S{5.2cm}}
+\begin{longtable}{S{0.9cm} S{2.1cm} S{4.8cm} S{5.8cm}}
 \caption{OWASP API Top 10 coverage}\label{tab:owasp}\\
 \toprule
 \textbf{Item} & \textbf{Category} & \textbf{Vulnerability (baseline)} & \textbf{Control implemented} \\
@@ -1147,16 +1296,16 @@ API3 & BOPLA & Controllers bound JPA entities directly; any JSON field was writa
 \texttt{PatientRequestDTO} and \texttt{AppointmentRequestDTO} constrain the accepted surface. \texttt{@Valid} with Bean Validation (\texttt{@NotBlank}, \texttt{@NotNull}, \texttt{@Past}, \texttt{@Email}, \texttt{@Pattern}) rejects malformed input before the service layer. \\[6pt]
 
 API4 & Resource Consumption & No rate limiting; no request-size limits; unbounded full-table scans possible. &
-\texttt{RateLimitFilter} (token-bucket, 60 req/min per IP) registered on all \texttt{/api/**} routes. Request-size limits set to 1\,MB (\texttt{server.tomcat.max-http-form-post-size}, \texttt{spring.servlet.multipart.max-request-size}). \\[6pt]
+\texttt{RateLimitFilter} (token-bucket, 60\,req/min per IP) on all \texttt{/api/**} routes. Request-size limits set to 1\,MB via Tomcat (\texttt{max-http-form-post-size}) and Spring multipart (\texttt{max-request-size}, \texttt{max-file-size}). \\[6pt]
 
 API5 & Function-Level Auth & All endpoints accessible to any unauthenticated caller; no deny-by-default. &
-\texttt{SecurityConfig} uses \texttt{anyRequest().denyAll()} as the catch-all. All \texttt{/api/**} requires authentication. No route is reachable without a valid JWT. \\[6pt]
+\texttt{SecurityConfig} uses \texttt{anyRequest().\allowbreak denyAll()} as the catch-all. All \texttt{/api/**} requires authentication. No route is reachable without a valid JWT. \\[6pt]
 
 API8 & Security Misconfiguration & No security headers; no CSRF/frame protection; stack traces in error responses. &
-\texttt{SecurityConfig} sets HSTS (\texttt{max-age=31536000; includeSubDomains}), \texttt{X-Frame-Options: DENY}, \texttt{X-Content-Type-Options}, and \texttt{Content-Security-Policy: default-src 'none'; frame-ancestors 'none'}. Form login and HTTP Basic are disabled. \\[6pt]
+\texttt{SecurityConfig} configures HSTS, \texttt{X-Frame-Options: DENY}, \texttt{X-Content-Type-Options}, and \texttt{Content-Security-Policy: default-src 'none'}. Form login and HTTP Basic are disabled. \\[6pt]
 
 API9 & Improper Inventory & No API documentation or endpoint inventory. &
-\texttt{springdoc-openapi} generates an OpenAPI 3 specification at \texttt{/v3/api-docs}. Swagger UI is served at \texttt{/swagger-ui.html}. Both are \texttt{permitAll()} (public documentation). \texttt{@Operation} and \texttt{@Tag} annotations document each endpoint. \\
+\texttt{springdoc-openapi} generates an OpenAPI\,3 spec at \texttt{/v3/api-docs}; Swagger UI at \texttt{/swagger-ui.html}. Both are \texttt{permitAll()}. All endpoints annotated with \texttt{@Operation} and \texttt{@Tag}. \\
 \end{longtable}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -1302,6 +1451,52 @@ AS-08 & Overload the API with Repeated Requests &
   \textbf{\textcolor{sevmedium}{Residual Risk}} &
   \texttt{RateLimitFilter} limits each IP to 60 requests/min, significantly raising the cost of a DoS attack. Authentication adds a further barrier. However, no WAF, IP-based throttling at the network perimeter, or connection pool tuning has been applied. A distributed attack (multiple IPs) remains feasible. \\
 \end{longtable}
+
+\subsection{Regression Evidence}
+
+The following figures present the regression diagrams produced for each abuse story, showing the original attack path, what changed in Part 2, and the resulting status.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{01_regression.png}
+  \caption{AS-01 -- Unauthorised Access to Patient Data: \textbf{Prevented}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{02_regression.png}
+  \caption{AS-02 -- Link Patient Identity to Appointment History: \textbf{Prevented}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{03_regression.png}
+  \caption{AS-03 -- Direct Patient Identification via IDOR: \textbf{Prevented}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{04_regression.png}
+  \caption{AS-04 -- Infer Health Condition from Appointment Metadata: \textbf{Prevented}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{05_regression.png}
+  \caption{AS-05 -- Modify or Reassign Appointment Records: \textbf{Prevented}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{06_regression.png}
+  \caption{AS-06 -- Destroy Patient Records via Cascade Deletion: \textbf{Residual Risk}}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{07_regression.png}
+  \caption{AS-07/AS-08 -- Undetectable Actions \& API Overload: \textbf{Residual Risk}}
+\end{figure}
 
 \subsection{Regression Summary}
 
