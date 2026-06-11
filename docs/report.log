@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  11 JUN 2026 21:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2025.12.8)  11 JUN 2026 21:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1393,7 +1393,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/01_regression.png, id=718, 1232.605pt x 1123.19624pt>
 File: images/01_regression.png Graphic file (type png)
 <use images/01_regression.png>
-Package pdftex.def Info: images/01_regression.png  used on input line 1528.
+Package pdftex.def Info: images/01_regression.png  used on input line 1537.
 (pdftex.def)             Requested size: 438.17227pt x 399.27731pt.
 
 
@@ -1408,7 +1408,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/02_regression.png, id=723, 1232.605pt x 1033.8625pt>
 File: images/02_regression.png Graphic file (type png)
 <use images/02_regression.png>
-Package pdftex.def Info: images/02_regression.png  used on input line 1534.
+Package pdftex.def Info: images/02_regression.png  used on input line 1543.
 (pdftex.def)             Requested size: 438.17227pt x 367.52069pt.
 
 
@@ -1423,7 +1423,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/03_regression.png, id=729, 1232.605pt x 1099.10625pt>
 File: images/03_regression.png Graphic file (type png)
 <use images/03_regression.png>
-Package pdftex.def Info: images/03_regression.png  used on input line 1540.
+Package pdftex.def Info: images/03_regression.png  used on input line 1549.
 (pdftex.def)             Requested size: 438.17227pt x 390.71373pt.
 
 
@@ -1438,7 +1438,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/04_regression.png, id=735, 1232.605pt x 1107.13625pt>
 File: images/04_regression.png Graphic file (type png)
 <use images/04_regression.png>
-Package pdftex.def Info: images/04_regression.png  used on input line 1546.
+Package pdftex.def Info: images/04_regression.png  used on input line 1555.
 (pdftex.def)             Requested size: 438.17227pt x 393.56827pt.
 
 
@@ -1453,7 +1453,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/05_regression.png, id=741, 1232.605pt x 1104.125pt>
 File: images/05_regression.png Graphic file (type png)
 <use images/05_regression.png>
-Package pdftex.def Info: images/05_regression.png  used on input line 1552.
+Package pdftex.def Info: images/05_regression.png  used on input line 1561.
 (pdftex.def)             Requested size: 438.17227pt x 392.49782pt.
 
 
@@ -1468,7 +1468,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/06_regression.png, id=748, 1232.605pt x 992.70876pt>
 File: images/06_regression.png Graphic file (type png)
 <use images/06_regression.png>
-Package pdftex.def Info: images/06_regression.png  used on input line 1558.
+Package pdftex.def Info: images/06_regression.png  used on input line 1567.
 (pdftex.def)             Requested size: 438.17227pt x 352.89122pt.
 
 
@@ -1483,7 +1483,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 <images/07_regression.png, id=754, 1232.605pt x 1078.0275pt>
 File: images/07_regression.png Graphic file (type png)
 <use images/07_regression.png>
-Package pdftex.def Info: images/07_regression.png  used on input line 1564.
+Package pdftex.def Info: images/07_regression.png  used on input line 1573.
 (pdftex.def)             Requested size: 438.17227pt x 383.2206pt.
 
 
@@ -1521,11 +1521,11 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 3335CDF4D6F9EA8B33CF88462167C9CC;11590.
  ) 
 Here is how much of TeX's memory you used:
- 16527 strings out of 475085
- 274371 string characters out of 5764176
+ 16531 strings out of 475085
+ 274419 string characters out of 5764176
  726307 words of memory out of 5000000
  38928 multiletter control sequences out of 15000+600000
- 629379 words of font info for 156 fonts, out of 8000000 for 9000
+ 629573 words of font info for 158 fonts, out of 8000000 for 9000
  61 hyphenation exceptions out of 8191
  75i,12n,79p,1195b,620s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texmf/fonts/type1/public/lm/lmbx10.pfb></usr/share/texmf/fonts/ty
@@ -1535,7 +1535,7 @@ lic/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/t
 exmf/fonts/type1/public/lm/lmri10.pfb></usr/share/texmf/fonts/type1/public/lm/l
 mri12.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/
 fonts/type1/public/lm/lmtt12.pfb>
-Output written on report.pdf (59 pages, 5202568 bytes).
+Output written on report.pdf (59 pages, 5202521 bytes).
 PDF statistics:
  871 PDF objects out of 1000 (max. 8388607)
  719 compressed objects within 8 object streams

@@ -1502,12 +1502,21 @@ AS-05 & Modify or Reassign Appointment Records &
   \texttt{PUT /api/appointments/\{id\}} requires UPDATE role. \texttt{AppointmentRequestDTO} constrains the writable fields (dateTime, specialty, status) and excludes the patient relationship, eliminating the silent rebind attack via nested objects. \\[8pt]
 
 AS-06 & Destroy Patient Records via Cascade Deletion &
-  \textbf{\textcolor{sevmedium}{Residual Risk}} &
-  \texttt{DELETE /api/patients/\{id\}} now requires authentication and the ADMIN DELETE role, blocking external attackers. However, cascade deletion (\texttt{CascadeType.ALL + orphanRemoval}) remains in place -- a compromised admin account can still destroy all linked records irreversibly. No soft-delete or confirmation guard exists. \\[8pt]
+  \textbf{\textcolor{sevlow}{Prevented}} &
+  \texttt{DELETE /api/patients/\{id\}} requires ADMIN role. Soft-delete is now implemented:
+  \texttt{Patient} and \texttt{Appointment} carry a \texttt{deleted\_at} timestamp; deletion
+  sets this field instead of issuing a SQL \texttt{DELETE}. \texttt{@SQLRestriction} on both
+  entities filters soft-deleted records from all queries automatically. Cascade hard-deletion
+  (\texttt{orphanRemoval}) has been removed. Data is never permanently destroyed by a single
+  API call. \\[8pt]
 
 AS-07 & Perform Undetectable Actions &
-  \textbf{\textcolor{sevmedium}{Residual Risk}} &
-  Authentication now records actor identity (JWT \texttt{sub} claim) with every request, partially addressing R-02. However, no structured audit log persists CRUD operations. Actions performed by an authenticated user remain uninvestigable after the fact. \\[8pt]
+  \textbf{\textcolor{sevmedium}{Detected}} &
+  A structured \texttt{audit\_logs} table now persists every CREATE, UPDATE, and DELETE
+  operation with the JWT \texttt{sub} claim (actor), resource type, resource ID, and
+  timestamp. The log is written synchronously within the same request. ADMIN users can
+  query the full trail via \texttt{GET /api/audit-logs}. Post-incident investigation is
+  now possible for all authenticated CRUD operations. \\[8pt]
 
 AS-08 & Overload the API with Repeated Requests &
   \textbf{\textcolor{sevlow}{Prevented}} &
@@ -1556,13 +1565,13 @@ The following figures present the regression diagrams produced for each abuse st
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{06_regression.png}
-  \caption{AS-06 -- Destroy Patient Records via Cascade Deletion: \textbf{Residual Risk}}
+  \caption{AS-06 -- Destroy Patient Records via Cascade Deletion: \textbf{Prevented}}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{07_regression.png}
-  \caption{AS-07 -- Undetectable Actions: \textbf{Residual Risk}; AS-08 -- API Overload: \textbf{Prevented}}
+  \caption{AS-07 -- Undetectable Actions: \textbf{Detected}; AS-08 -- API Overload: \textbf{Prevented}}
 \end{figure}
 
 \subsection{Regression Summary}
@@ -1574,34 +1583,29 @@ The following figures present the regression diagrams produced for each abuse st
 \toprule
 \textbf{Status} & \textbf{Count} & \textbf{Abuse Stories} \\
 \midrule
-Prevented      & 6 & AS-01, AS-02, AS-03, AS-04, AS-05, AS-08 \\
-Residual Risk  & 2 & AS-06, AS-07 \\
-Detected only  & 0 & -- \\
+Prevented      & 7 & AS-01, AS-02, AS-03, AS-04, AS-05, AS-06, AS-08 \\
+Detected       & 1 & AS-07 \\
+Residual Risk  & 0 & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The two residual risks share a common theme: the absence of persistent, structured observability.
-AS-06 requires a soft-delete mechanism to prevent irreversible data loss; AS-07 requires a
-structured audit log to make actor actions investigable. Both are identified as future work items.
+Seven of the eight abuse stories are classified as \textbf{Prevented}; the remaining one
+(AS-07) is classified as \textbf{Detected} -- actor identity and action are persisted in the
+audit log, making post-incident investigation possible. No abuse story remains at Residual Risk.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Future Work}
 % ─────────────────────────────────────────────────────────────────────────────
 
-Several security improvements remain identified but not yet implemented.
-A \textbf{structured audit log} should persist actor identity, timestamp, resource, and action
-for every CRUD operation; this is required for GDPR compliance and forensic investigation
-(ZTA tenet 7, AS-07). Closely related, a \textbf{soft-delete} mechanism should replace cascade
-hard deletion with a \texttt{deletedAt} timestamp to prevent irreversible data loss (AS-06).
-
-On the data-model side, replacing sequential integer primary keys with \textbf{UUID primary keys}
-would eliminate the ID enumeration vector exploited in AS-03, making brute-force IDOR
-significantly harder even for authenticated callers. Regarding transport security,
-\textbf{mTLS for inter-service communication} should extend TLS from the current WAF perimeter
-to internal container-to-container channels (WAF $\to$ backend, backend $\to$ Keycloak) to fully
-satisfy ZTA tenet 2. Finally, \textbf{device posture} assessment -- integrating endpoint verification
-before granting access -- is needed to address ZTA tenet 1.
+Two security improvements remain identified but not yet implemented.
+Replacing sequential integer primary keys with \textbf{UUID primary keys} would eliminate the
+ID enumeration vector exploited in AS-03, making brute-force IDOR significantly harder even
+for authenticated callers. On the transport side, \textbf{mTLS for inter-service communication}
+should extend TLS from the current WAF perimeter to internal container-to-container channels
+(WAF $\to$ backend, backend $\to$ Keycloak) to fully satisfy ZTA tenet 2. Additionally,
+\textbf{device posture} assessment -- integrating endpoint verification before granting access
+-- is needed to address ZTA tenet 1.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
@@ -1621,12 +1625,12 @@ on port 443, and enforces IP-based rate limiting in combination with the applica
 \texttt{RateLimitFilter}. The OpenAPI specification documents all endpoints, and a two-run DAST
 pipeline validates the security posture both with and without the WAF in place.
 
-Of the eight abuse stories from Part 1, six are now classified as \textbf{Prevented} and two
-remain \textbf{Residual Risk}. AS-06 (cascade deletion by a compromised admin) is mitigated by
-role restriction but not fully resolved without a soft-delete mechanism. AS-07 (undetectable
-actions) is partially addressed by JWT actor identity but lacks a persistent audit log. These
-two items, together with UUID primary keys and full mTLS coverage, represent the clearest
-priorities for any future security iteration of the system.
+Of the eight abuse stories from Part 1, seven are now classified as \textbf{Prevented} and one
+(AS-07) as \textbf{Detected}. Soft-delete prevents irreversible data loss from cascade deletion
+(AS-06). The structured audit log makes every CRUD operation attributable and investigable
+(AS-07). No abuse story remains at Residual Risk. The principal outstanding items are UUID
+primary keys to harden IDOR resistance further, and mTLS for internal service-to-service
+channels to fully close ZTA tenet 2.
 
 \end{document}
 

@@ -6,6 +6,7 @@ import java.util.List;
 import org.pt.ua.deti.clinicProject.dto.PatientRequestDTO;
 import org.pt.ua.deti.clinicProject.dto.PatientResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Patient;
+import org.pt.ua.deti.clinicProject.services.AuditLogService;
 import org.pt.ua.deti.clinicProject.services.PatientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/patients")
 public class PatientController {
     private final PatientService patientService;
+    private final AuditLogService auditLogService;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, AuditLogService auditLogService) {
         this.patientService = patientService;
+        this.auditLogService = auditLogService;
     }
 
     @Operation(summary = "List all patients")
@@ -59,6 +62,7 @@ public class PatientController {
         p.setPhoneNumber(dto.phoneNumber());
         p.setEmail(dto.email());
         Patient created = patientService.create(p);
+        auditLogService.log("CREATE", "patients", String.valueOf(created.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(PatientResponseDTO.fromEntity(created));
     }
 
@@ -72,8 +76,10 @@ public class PatientController {
         p.setPhoneNumber(dto.phoneNumber());
         p.setEmail(dto.email());
         return patientService.update(id, p)
-                .map(PatientResponseDTO::fromEntity)
-                .map(ResponseEntity::ok)
+                .map(updated -> {
+                    auditLogService.log("UPDATE", "patients", String.valueOf(id));
+                    return ResponseEntity.ok(PatientResponseDTO.fromEntity(updated));
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -84,6 +90,7 @@ public class PatientController {
         if (!patientService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
+        auditLogService.log("DELETE", "patients", String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
 }

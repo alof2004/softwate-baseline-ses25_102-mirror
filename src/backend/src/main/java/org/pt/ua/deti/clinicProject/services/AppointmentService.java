@@ -64,11 +64,11 @@ public class AppointmentService {
     }
 
     public boolean delete(Long id) {
-        if (!appointmentRepository.existsById(id)) {
-            return false;
-        }
-        appointmentRepository.deleteById(id);
-        return true;
+        return appointmentRepository.findById(id).map(appointment -> {
+            appointment.setDeletedAt(java.time.LocalDateTime.now());
+            appointmentRepository.save(appointment);
+            return true;
+        }).orElse(false);
     }
 
     public List<Appointment> search(

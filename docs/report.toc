@@ -71,5 +71,5 @@
 \contentsline {section}{\numberline {4.6}Abuse Story Regression}{48}{section.4.6}%
 \contentsline {subsection}{\numberline {4.6.1}Regression Evidence}{50}{subsection.4.6.1}%
 \contentsline {subsection}{\numberline {4.6.2}Regression Summary}{57}{subsection.4.6.2}%
-\contentsline {section}{\numberline {4.7}Future Work}{58}{section.4.7}%
+\contentsline {section}{\numberline {4.7}Future Work}{57}{section.4.7}%
 \contentsline {section}{\numberline {4.8}Conclusion}{58}{section.4.8}%

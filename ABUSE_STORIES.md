@@ -72,7 +72,7 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Abuse Case** | As a malicious external user, I want to remove patient records so that I can cause irreversible data loss and disrupt normal clinical operation. |
 | **How** | The attacker sends unauthenticated DELETE requests to `/api/patients/{id}`. Due to cascade deletion (`orphanRemoval=true`), every linked appointment is also permanently destroyed. Sequential IDs allow iterating from 1 to N to wipe the entire database. |
 | **Impact** | All patient PII and linked appointment history is permanently lost with no recovery mechanism. |
-| **Part 2 Status** | **Residual Risk** — DELETE requires authentication and `ADMIN` role. However, no backup or soft-delete mechanism exists; a compromised admin account could still wipe all data. |
+| **Part 2 Status** | **Prevented** — DELETE requires ADMIN role. Soft-delete is implemented: `Patient` and `Appointment` carry a `deleted_at` timestamp; deletion sets this field instead of issuing a SQL DELETE. `@SQLRestriction` filters soft-deleted records from all queries. Data is never permanently destroyed by a single API call. |
 
 ---
 
@@ -84,7 +84,7 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Abuse Case** | As a malicious internal user or external attacker, I want to create, modify, or delete patient and appointment records so that my actions leave no trace and cannot be attributed to me. |
 | **How** | The system had no authentication, no audit log, and no access log at any layer. Any CRUD operation on any record was permanently undetectable once performed. |
 | **Impact** | Malicious or accidental changes cannot be investigated or attributed. The clinic cannot comply with GDPR. |
-| **Part 2 Status** | **Residual Risk** — JWT `sub` claim now records actor identity per request. However, no structured audit log persists CRUD operations; post-incident investigation remains limited. |
+| **Part 2 Status** | **Detected** — A structured `audit_logs` table persists every CREATE, UPDATE, and DELETE with actor (JWT `sub`), resource, resource ID, and timestamp. ADMIN users can query the full trail via `GET /api/audit-logs`. Post-incident investigation is now possible for all authenticated CRUD operations. |
 
 ---
 
@@ -96,4 +96,4 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Abuse Case** | As an attacker, I want to flood patient and appointment endpoints with repeated requests so that I can make the system slow or unavailable for legitimate users. |
 | **How** | The attacker automates repeated API requests. No rate limiting existed, and `GET /api/appointments` with no filters triggered a full table scan exhausting the HikariCP connection pool (~10 connections). |
 | **Impact** | The system becomes slow or unavailable for normal clinical use. |
-| **Part 2 Status** | **Residual Risk** — `RateLimitFilter` limits each IP to 60 req/min. WAF (Nginx + ModSecurity CRS) adds IP-based perimeter throttling. A distributed multi-IP attack remains feasible. |
+| **Part 2 Status** | **Prevented** — Dual-layer rate limiting: Nginx `limit_req_zone` (30 req/s burst / 10 req/s sustained per IP at the perimeter) and Spring `RateLimitFilter` (60 req/min per IP at the application layer). ModSecurity CRS request-body limits (1 MB) further constrain large-payload abuse. |
