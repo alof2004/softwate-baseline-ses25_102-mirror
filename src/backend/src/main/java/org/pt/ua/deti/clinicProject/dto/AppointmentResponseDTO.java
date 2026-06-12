@@ -9,12 +9,14 @@ public record AppointmentResponseDTO(
         String specialty,
         String status,
         Long patientId,
-        String patientName) {
+        String patientName,
+        String doctorSub) {
 
     public static AppointmentResponseDTO fromEntity(Appointment a) {
         Long pid = a.getPatient() != null ? a.getPatient().getId() : null;
         String pname = a.getPatient() != null ? a.getPatient().getName() : null;
         return new AppointmentResponseDTO(
-                a.getId(), a.getDateTime(), a.getSpecialty(), a.getStatus(), pid, pname);
+                a.getId(), a.getDateTime(), a.getSpecialty(), a.getStatus(), pid, pname,
+                a.getDoctorSub());
     }
 }

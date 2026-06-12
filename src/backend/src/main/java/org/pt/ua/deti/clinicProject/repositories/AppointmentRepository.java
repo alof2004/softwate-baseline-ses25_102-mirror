@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface AppointmentRepository
         extends JpaRepository<Appointment, Long>, JpaSpecificationExecutor<Appointment> {
     List<Appointment> findByPatientId(Long patientId);
+    List<Appointment> findByDoctorSub(String doctorSub);
+    long countByPatientIdAndDoctorSub(Long patientId, String doctorSub);
 }

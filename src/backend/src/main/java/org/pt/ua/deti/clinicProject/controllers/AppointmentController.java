@@ -72,6 +72,7 @@ public class AppointmentController {
         a.setDateTime(dto.dateTime());
         a.setSpecialty(dto.specialty());
         a.setStatus(dto.status());
+        a.setDoctorSub(dto.doctorSub());
         return appointmentService.create(patientId, a)
                 .map(created -> {
                     auditLogService.log("CREATE", "appointments", String.valueOf(created.getId()));
