@@ -164,7 +164,7 @@ jobs:
             -v "$PWD/dast/reports:/zap/wrk:rw" \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
-            -t "http://frontend:8080" \
+            -t "http://waf:8080" \
             -a \
             -j \
             -I \
