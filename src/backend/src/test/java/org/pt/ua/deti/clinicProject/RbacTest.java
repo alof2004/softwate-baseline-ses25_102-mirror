@@ -166,4 +166,26 @@ class RbacTest {
     void unauthenticated_isRejected() throws Exception {
         mvc.perform(get("/api/patients")).andExpect(status().isUnauthorized());
     }
+
+    // ── AUDIT LOGS ───────────────────────────────────────────────────────────
+
+    @Test @DisplayName("ADMIN can READ audit logs")
+    void admin_readAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("ADMIN"))).andExpect(status().isOk());
+    }
+
+    @Test @DisplayName("DOCTOR cannot READ audit logs")
+    void doctor_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("DOCTOR"))).andExpect(status().isForbidden());
+    }
+
+    @Test @DisplayName("RECEPTIONIST cannot READ audit logs")
+    void receptionist_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("RECEPTIONIST"))).andExpect(status().isForbidden());
+    }
+
+    @Test @DisplayName("Unauthenticated cannot READ audit logs")
+    void unauthenticated_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs")).andExpect(status().isUnauthorized());
+    }
 }

@@ -38,6 +38,9 @@ public class Appointment {
     @Column
     private LocalDateTime deletedAt;
 
+    @Column
+    private String doctorSub;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "patient_id", nullable = false)
     @JsonBackReference
