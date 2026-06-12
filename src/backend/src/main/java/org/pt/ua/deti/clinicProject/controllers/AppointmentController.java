@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.dto.AppointmentRequestDTO;
 import org.pt.ua.deti.clinicProject.dto.AppointmentResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Appointment;
@@ -56,7 +57,7 @@ public class AppointmentController {
     @Operation(summary = "Get appointment by ID")
     @GetMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'READ')")
-    public ResponseEntity<AppointmentResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<AppointmentResponseDTO> getById(@PathVariable UUID id) {
         return appointmentService.getById(id)
                 .map(AppointmentResponseDTO::fromEntity)
                 .map(ResponseEntity::ok)
@@ -67,7 +68,7 @@ public class AppointmentController {
     @PostMapping
     @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'CREATE')")
     public ResponseEntity<AppointmentResponseDTO> create(
-            @RequestParam Long patientId, @Valid @RequestBody AppointmentRequestDTO dto) {
+            @RequestParam UUID patientId, @Valid @RequestBody AppointmentRequestDTO dto) {
         Appointment a = new Appointment();
         a.setDateTime(dto.dateTime());
         a.setSpecialty(dto.specialty());
@@ -85,7 +86,7 @@ public class AppointmentController {
     @PutMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'UPDATE')")
     public ResponseEntity<AppointmentResponseDTO> update(
-            @PathVariable Long id, @Valid @RequestBody AppointmentRequestDTO dto) {
+            @PathVariable UUID id, @Valid @RequestBody AppointmentRequestDTO dto) {
         Appointment a = new Appointment();
         a.setDateTime(dto.dateTime());
         a.setSpecialty(dto.specialty());
@@ -101,7 +102,7 @@ public class AppointmentController {
     @Operation(summary = "Delete an appointment")
     @DeleteMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'appointments', 'DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (!appointmentService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
