@@ -3,6 +3,7 @@ package org.pt.ua.deti.clinicProject.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.dto.PatientRequestDTO;
 import org.pt.ua.deti.clinicProject.dto.PatientResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Patient;
@@ -45,7 +46,7 @@ public class PatientController {
     @Operation(summary = "Get patient by ID")
     @GetMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'READ')")
-    public ResponseEntity<PatientResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<PatientResponseDTO> getById(@PathVariable UUID id) {
         return patientService.getById(id)
                 .map(PatientResponseDTO::fromEntity)
                 .map(ResponseEntity::ok)
@@ -69,7 +70,7 @@ public class PatientController {
     @Operation(summary = "Update an existing patient")
     @PutMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'UPDATE')")
-    public ResponseEntity<PatientResponseDTO> update(@PathVariable Long id, @Valid @RequestBody PatientRequestDTO dto) {
+    public ResponseEntity<PatientResponseDTO> update(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO dto) {
         Patient p = new Patient();
         p.setName(dto.name());
         p.setDateOfBirth(dto.dateOfBirth());
@@ -86,7 +87,7 @@ public class PatientController {
     @Operation(summary = "Delete a patient")
     @DeleteMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (!patientService.delete(id)) {
             return ResponseEntity.notFound().build();
         }

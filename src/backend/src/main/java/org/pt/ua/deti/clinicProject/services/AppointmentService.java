@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.models.Appointment;
 import org.pt.ua.deti.clinicProject.models.Patient;
 import org.pt.ua.deti.clinicProject.repositories.AppointmentRepository;
@@ -32,13 +33,13 @@ public class AppointmentService {
         return appointmentRepository.findAll();
     }
 
-    public Optional<Appointment> getById(Long id) {
+    public Optional<Appointment> getById(UUID id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return appointmentRepository.findById(id)
                 .filter(a -> canAccess(auth, a));
     }
 
-    public Optional<Appointment> create(Long patientId, Appointment appointment) {
+    public Optional<Appointment> create(UUID patientId, Appointment appointment) {
         return patientRepository
                 .findById(patientId)
                 .map(patient -> {
@@ -48,7 +49,7 @@ public class AppointmentService {
                 });
     }
 
-    public Optional<Appointment> update(Long id, Appointment appointment) {
+    public Optional<Appointment> update(UUID id, Appointment appointment) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return appointmentRepository.findById(id)
                 .filter(a -> canAccess(auth, a))
@@ -69,7 +70,7 @@ public class AppointmentService {
                 });
     }
 
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         return appointmentRepository.findById(id).map(appointment -> {
             appointment.setDeletedAt(LocalDateTime.now());
             appointmentRepository.save(appointment);

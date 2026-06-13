@@ -3,6 +3,7 @@ package org.pt.ua.deti.clinicProject.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.models.Appointment;
 import org.pt.ua.deti.clinicProject.models.Patient;
 import org.pt.ua.deti.clinicProject.repositories.AppointmentRepository;
@@ -32,7 +33,7 @@ public class PatientService {
         return patientRepository.findAll();
     }
 
-    public Optional<Patient> getById(Long id) {
+    public Optional<Patient> getById(UUID id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return patientRepository.findById(id)
                 .filter(p -> canAccess(auth, p.getId()));
@@ -43,7 +44,7 @@ public class PatientService {
         return patientRepository.save(patient);
     }
 
-    public Optional<Patient> update(Long id, Patient patient) {
+    public Optional<Patient> update(UUID id, Patient patient) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return patientRepository.findById(id)
                 .filter(p -> canAccess(auth, p.getId()))
@@ -57,7 +58,7 @@ public class PatientService {
     }
 
     @Transactional
-    public boolean delete(Long id) {
+    public boolean delete(UUID id) {
         return patientRepository.findById(id).map(patient -> {
             LocalDateTime now = LocalDateTime.now();
             List<Appointment> appointments = appointmentRepository.findByPatientId(id);
@@ -74,7 +75,7 @@ public class PatientService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
     }
 
-    private boolean canAccess(Authentication auth, Long patientId) {
+    private boolean canAccess(Authentication auth, UUID patientId) {
         if (!isDoctor(auth)) return true;
         return appointmentRepository.countByPatientIdAndDoctorSub(patientId, auth.getName()) > 0;
     }
