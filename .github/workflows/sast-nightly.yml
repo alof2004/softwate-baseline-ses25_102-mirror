@@ -24,7 +24,7 @@ jobs:
             build-mode: none
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -88,7 +88,7 @@ jobs:
 
       - name: Upload Semgrep nightly report
         if: always() && hashFiles('reports/semgrep-nightly.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: semgrep-nightly-report
           path: reports/semgrep-nightly.sarif
@@ -148,7 +148,7 @@ jobs:
       DOCKER_BUILD_SUMMARY: "false"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -189,7 +189,7 @@ jobs:
 
       - name: Upload backend image scan report
         if: always() && hashFiles('trivy-backend-image.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-backend-image-report
           path: trivy-backend-image.sarif
@@ -223,7 +223,7 @@ jobs:
 
       - name: Upload frontend image scan report
         if: always() && hashFiles('trivy-frontend-image.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-frontend-image-report
           path: trivy-frontend-image.sarif

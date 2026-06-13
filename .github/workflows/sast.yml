@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload Gitleaks report
         if: always() && hashFiles('reports/gitleaks-pr.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: gitleaks-pr-report
           path: reports/gitleaks-pr.sarif
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -121,7 +121,7 @@ jobs:
 
       - name: Upload Semgrep report
         if: always() && hashFiles('reports/semgrep-pr.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: semgrep-pr-report
           path: reports/semgrep-pr.sarif
@@ -146,7 +146,7 @@ jobs:
 
       - name: Upload Semgrep advisory report
         if: always() && hashFiles('reports/semgrep-pr-advisory.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: semgrep-pr-advisory-report
           path: reports/semgrep-pr-advisory.sarif
@@ -163,7 +163,7 @@ jobs:
         working-directory: src/frontend
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
         uses: actions/setup-node@v4.1.0
@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload ESLint report
         if: always() && hashFiles('reports/eslint-security.json') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: eslint-security-report
           path: reports/eslint-security.json
@@ -196,7 +196,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Trivy filesystem scan
         id: trivy_fs
@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload Trivy filesystem report
         if: always() && hashFiles('trivy-fs-results.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-fs-report
           path: trivy-fs-results.sarif
@@ -237,7 +237,7 @@ jobs:
 
       - name: Upload Trivy filesystem advisory report
         if: always() && hashFiles('trivy-fs-advisory.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-fs-advisory-report
           path: trivy-fs-advisory.sarif
@@ -272,7 +272,7 @@ jobs:
 
       - name: Upload Trivy backend dependency report
         if: always() && hashFiles('trivy-backend-results.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-backend-report
           path: trivy-backend-results.sarif
@@ -294,7 +294,7 @@ jobs:
 
       - name: Upload Trivy backend advisory report
         if: always() && hashFiles('trivy-backend-advisory.sarif') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: trivy-backend-advisory-report
           path: trivy-backend-advisory.sarif
@@ -343,7 +343,7 @@ jobs:
           --health-start-period 120s
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Shallow clones disabled for better analysis
 
@@ -547,7 +547,7 @@ jobs:
       - name: Download Gitleaks report
         if: needs.gitleaks.result == 'failure'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: gitleaks-pr-report
           path: reports/
@@ -555,21 +555,21 @@ jobs:
       - name: Download Semgrep report
         if: needs.semgrep.result == 'failure'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: semgrep-pr-report
           path: reports/
 
       - name: Download Semgrep advisory report
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: semgrep-pr-advisory-report
           path: reports/
 
       - name: Download ESLint report
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: eslint-security-report
           path: reports/
@@ -577,7 +577,7 @@ jobs:
       - name: Download Trivy filesystem report
         if: needs.trivy.result == 'failure'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: trivy-fs-report
           path: reports/
@@ -585,14 +585,14 @@ jobs:
       - name: Download Trivy backend report
         if: needs.trivy.result == 'failure'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           name: trivy-backend-report
           path: reports/
 
       - name: Download Trivy advisory reports
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.3.0
         with:
           pattern: trivy-*-advisory-report
           path: reports/
