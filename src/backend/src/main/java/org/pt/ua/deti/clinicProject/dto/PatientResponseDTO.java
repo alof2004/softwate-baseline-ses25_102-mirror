@@ -2,10 +2,11 @@ package org.pt.ua.deti.clinicProject.dto;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.models.Patient;
 
 public record PatientResponseDTO(
-        Long id,
+        UUID id,
         String name,
         LocalDate dateOfBirth,
         String phoneNumber,

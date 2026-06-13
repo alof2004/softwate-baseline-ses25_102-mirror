@@ -12,4 +12,6 @@ public record AppointmentRequestDTO(
         String specialty,
 
         @NotBlank(message = "Status is required")
-        String status) {}
+        String status,
+
+        String doctorSub) {}

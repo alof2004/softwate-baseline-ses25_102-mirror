@@ -12,6 +12,7 @@ export function usePermissions() {
 
   return {
     can(resource, action) {
+      // eslint-disable-next-line security/detect-object-injection -- PERMISSIONS keys are role strings validated by Keycloak; resource is a known constant from caller
       return roles.some(role => PERMISSIONS[role]?.[resource]?.includes(action))
     },
   }

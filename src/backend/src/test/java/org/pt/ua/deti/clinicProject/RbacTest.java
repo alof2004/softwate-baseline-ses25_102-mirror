@@ -77,40 +77,40 @@ class RbacTest {
 
     @Test @DisplayName("ADMIN can UPDATE patient")
     void admin_updatePatient() throws Exception {
-        mvc.perform(put("/api/patients/999").with(role("ADMIN"))
+        mvc.perform(put("/api/patients/00000000-0000-0000-0000-000000000000").with(role("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content(PATIENT_JSON))
                 .andExpect(status().isNotFound()); // 404 = auth passed, resource absent
     }
 
     @Test @DisplayName("DOCTOR can UPDATE patient")
     void doctor_updatePatient() throws Exception {
-        mvc.perform(put("/api/patients/999").with(role("DOCTOR"))
+        mvc.perform(put("/api/patients/00000000-0000-0000-0000-000000000000").with(role("DOCTOR"))
                 .contentType(MediaType.APPLICATION_JSON).content(PATIENT_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test @DisplayName("RECEPTIONIST cannot UPDATE patient")
     void receptionist_cannotUpdatePatient() throws Exception {
-        mvc.perform(put("/api/patients/999").with(role("RECEPTIONIST"))
+        mvc.perform(put("/api/patients/00000000-0000-0000-0000-000000000000").with(role("RECEPTIONIST"))
                 .contentType(MediaType.APPLICATION_JSON).content(PATIENT_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test @DisplayName("ADMIN can DELETE patient")
     void admin_deletePatient() throws Exception {
-        mvc.perform(delete("/api/patients/999").with(role("ADMIN")))
+        mvc.perform(delete("/api/patients/00000000-0000-0000-0000-000000000000").with(role("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test @DisplayName("DOCTOR cannot DELETE patient")
     void doctor_cannotDeletePatient() throws Exception {
-        mvc.perform(delete("/api/patients/999").with(role("DOCTOR")))
+        mvc.perform(delete("/api/patients/00000000-0000-0000-0000-000000000000").with(role("DOCTOR")))
                 .andExpect(status().isForbidden());
     }
 
     @Test @DisplayName("RECEPTIONIST cannot DELETE patient")
     void receptionist_cannotDeletePatient() throws Exception {
-        mvc.perform(delete("/api/patients/999").with(role("RECEPTIONIST")))
+        mvc.perform(delete("/api/patients/00000000-0000-0000-0000-000000000000").with(role("RECEPTIONIST")))
                 .andExpect(status().isForbidden());
     }
 
@@ -125,45 +125,67 @@ class RbacTest {
 
     @Test @DisplayName("ADMIN can CREATE appointment")
     void admin_createAppointment() throws Exception {
-        mvc.perform(post("/api/appointments?patientId=999").with(role("ADMIN"))
+        mvc.perform(post("/api/appointments?patientId=00000000-0000-0000-0000-000000000000").with(role("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content(APPOINTMENT_JSON))
                 .andExpect(status().isNotFound()); // patientId 999 not found
     }
 
     @Test @DisplayName("RECEPTIONIST can CREATE appointment")
     void receptionist_createAppointment() throws Exception {
-        mvc.perform(post("/api/appointments?patientId=999").with(role("RECEPTIONIST"))
+        mvc.perform(post("/api/appointments?patientId=00000000-0000-0000-0000-000000000000").with(role("RECEPTIONIST"))
                 .contentType(MediaType.APPLICATION_JSON).content(APPOINTMENT_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test @DisplayName("DOCTOR cannot CREATE appointment")
     void doctor_cannotCreateAppointment() throws Exception {
-        mvc.perform(post("/api/appointments?patientId=999").with(role("DOCTOR"))
+        mvc.perform(post("/api/appointments?patientId=00000000-0000-0000-0000-000000000000").with(role("DOCTOR"))
                 .contentType(MediaType.APPLICATION_JSON).content(APPOINTMENT_JSON))
                 .andExpect(status().isForbidden());
     }
 
     @Test @DisplayName("ADMIN can DELETE appointment")
     void admin_deleteAppointment() throws Exception {
-        mvc.perform(delete("/api/appointments/999").with(role("ADMIN")))
+        mvc.perform(delete("/api/appointments/00000000-0000-0000-0000-000000000000").with(role("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test @DisplayName("RECEPTIONIST can DELETE appointment")
     void receptionist_deleteAppointment() throws Exception {
-        mvc.perform(delete("/api/appointments/999").with(role("RECEPTIONIST")))
+        mvc.perform(delete("/api/appointments/00000000-0000-0000-0000-000000000000").with(role("RECEPTIONIST")))
                 .andExpect(status().isNotFound());
     }
 
     @Test @DisplayName("DOCTOR cannot DELETE appointment")
     void doctor_cannotDeleteAppointment() throws Exception {
-        mvc.perform(delete("/api/appointments/999").with(role("DOCTOR")))
+        mvc.perform(delete("/api/appointments/00000000-0000-0000-0000-000000000000").with(role("DOCTOR")))
                 .andExpect(status().isForbidden());
     }
 
     @Test @DisplayName("Unauthenticated request is rejected")
     void unauthenticated_isRejected() throws Exception {
         mvc.perform(get("/api/patients")).andExpect(status().isUnauthorized());
+    }
+
+    // ── AUDIT LOGS ───────────────────────────────────────────────────────────
+
+    @Test @DisplayName("ADMIN can READ audit logs")
+    void admin_readAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("ADMIN"))).andExpect(status().isOk());
+    }
+
+    @Test @DisplayName("DOCTOR cannot READ audit logs")
+    void doctor_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("DOCTOR"))).andExpect(status().isForbidden());
+    }
+
+    @Test @DisplayName("RECEPTIONIST cannot READ audit logs")
+    void receptionist_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs").with(role("RECEPTIONIST"))).andExpect(status().isForbidden());
+    }
+
+    @Test @DisplayName("Unauthenticated cannot READ audit logs")
+    void unauthenticated_cannotReadAuditLogs() throws Exception {
+        mvc.perform(get("/api/audit-logs")).andExpect(status().isUnauthorized());
     }
 }

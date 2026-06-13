@@ -3,9 +3,11 @@ package org.pt.ua.deti.clinicProject.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.UUID;
 import org.pt.ua.deti.clinicProject.dto.PatientRequestDTO;
 import org.pt.ua.deti.clinicProject.dto.PatientResponseDTO;
 import org.pt.ua.deti.clinicProject.models.Patient;
+import org.pt.ua.deti.clinicProject.services.AuditLogService;
 import org.pt.ua.deti.clinicProject.services.PatientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/patients")
 public class PatientController {
     private final PatientService patientService;
+    private final AuditLogService auditLogService;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, AuditLogService auditLogService) {
         this.patientService = patientService;
+        this.auditLogService = auditLogService;
     }
 
     @Operation(summary = "List all patients")
@@ -42,7 +46,7 @@ public class PatientController {
     @Operation(summary = "Get patient by ID")
     @GetMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'READ')")
-    public ResponseEntity<PatientResponseDTO> getById(@PathVariable Long id) {
+    public ResponseEntity<PatientResponseDTO> getById(@PathVariable UUID id) {
         return patientService.getById(id)
                 .map(PatientResponseDTO::fromEntity)
                 .map(ResponseEntity::ok)
@@ -59,31 +63,35 @@ public class PatientController {
         p.setPhoneNumber(dto.phoneNumber());
         p.setEmail(dto.email());
         Patient created = patientService.create(p);
+        auditLogService.log("CREATE", "patients", String.valueOf(created.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(PatientResponseDTO.fromEntity(created));
     }
 
     @Operation(summary = "Update an existing patient")
     @PutMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'UPDATE')")
-    public ResponseEntity<PatientResponseDTO> update(@PathVariable Long id, @Valid @RequestBody PatientRequestDTO dto) {
+    public ResponseEntity<PatientResponseDTO> update(@PathVariable UUID id, @Valid @RequestBody PatientRequestDTO dto) {
         Patient p = new Patient();
         p.setName(dto.name());
         p.setDateOfBirth(dto.dateOfBirth());
         p.setPhoneNumber(dto.phoneNumber());
         p.setEmail(dto.email());
         return patientService.update(id, p)
-                .map(PatientResponseDTO::fromEntity)
-                .map(ResponseEntity::ok)
+                .map(updated -> {
+                    auditLogService.log("UPDATE", "patients", String.valueOf(id));
+                    return ResponseEntity.ok(PatientResponseDTO.fromEntity(updated));
+                })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @Operation(summary = "Delete a patient")
     @DeleteMapping("/{id}")
     @PreAuthorize("@perms.canAnyRole(authentication, 'patients', 'DELETE')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         if (!patientService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
+        auditLogService.log("DELETE", "patients", String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
 }

@@ -56,27 +56,29 @@ function PatientsPanel({
                 <td>{formatPhonePt(patient.phoneNumber)}</td>
                 <td>{patient.email}</td>
                 <td>{formatIntegerPt((patient.appointments ?? []).length)}</td>
-                <td className={styles.actionsCell}>
-                  {can('patients', 'UPDATE') && (
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnGhost}`}
-                      onClick={() => onStartEdit(patient)}
-                      disabled={busyAction}
-                    >
-                      Edit
-                    </button>
-                  )}
-                  {can('patients', 'DELETE') && (
-                    <button
-                      type="button"
-                      className={`${styles.btn} ${styles.btnDanger}`}
-                      onClick={() => onDelete(patient)}
-                      disabled={busyAction}
-                    >
-                      Delete
-                    </button>
-                  )}
+                <td>
+                  <div className={styles.actionsCell}>
+                    {can('patients', 'UPDATE') && (
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnGhost}`}
+                        onClick={() => onStartEdit(patient)}
+                        disabled={busyAction}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    {can('patients', 'DELETE') && (
+                      <button
+                        type="button"
+                        className={`${styles.btn} ${styles.btnDanger}`}
+                        onClick={() => onDelete(patient)}
+                        disabled={busyAction}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

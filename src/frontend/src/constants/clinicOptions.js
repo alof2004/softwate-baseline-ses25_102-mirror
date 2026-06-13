@@ -29,5 +29,6 @@ const STATUS_LABELS = {
 }
 
 export function toStatusLabel(status) {
+  // eslint-disable-next-line security/detect-object-injection -- STATUS_LABELS is a closed constant map; status values come from the API enum
   return STATUS_LABELS[status] ?? status
 }
