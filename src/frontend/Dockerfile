@@ -12,7 +12,10 @@ RUN npm run build
 
 # Stage 2 — serve with Nginx
 FROM nginx:1.28-alpine
-RUN apk update && apk upgrade --no-cache && apk add --no-cache nginx
+RUN apk update \
+    && apk del nginx-module-acme nginx-module-geoip nginx-module-image-filter nginx-module-njs nginx-module-xslt \
+    && apk upgrade --no-cache \
+    && apk add --no-cache 'nginx>=1.28.3-r3'
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
