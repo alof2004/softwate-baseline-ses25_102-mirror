@@ -341,33 +341,104 @@ jobs:
             dast/reports/nginx-access.log
           if-no-files-found: warn
 
-      - name: Enforce DAST gate
+      - name: Clean up Docker containers
+        if: always()
+        run: |
+          docker stop frontend waf backend postgres || true
+          docker rm  frontend waf backend postgres || true
+          docker network rm dast-network || true
+
+  # ── Sentinel: combines both results, posts PR comment, enforces gate ───────
+  zap-baseline:
+    name: OWASP ZAP Baseline
+    runs-on: ubuntu-latest
+    needs: [zap-direct, zap-via-waf]
+    if: always()
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Download direct reports
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: dast-pr-direct-reports
+          path: dast/reports/direct
+        continue-on-error: true
+
+      - name: Download WAF reports
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: dast-reports
+          path: dast/reports/waf
+        continue-on-error: true
+
+      - name: Build combined summary and enforce gate
         if: always()
         env:
           TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
           ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           summary_file="$RUNNER_TEMP/dast-summary.md"
+          gate_failed=0
 
-          if [ ! -f "dast/reports/zap-report.json" ]; then
-            {
-              echo "<!-- dast-pr-comment -->"
-              echo "## DAST Scan Summary"
-              echo "**Gate Status:** Failed. ZAP report was not generated."
-            } > "$summary_file"
-            cat "$summary_file" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
+          {
+            echo "<!-- dast-pr-comment -->"
+            echo "## DAST Scan Summary"
+            echo ""
+            echo "| Mode | High | Medium | Low | Gate |"
+            echo "|------|------|--------|-----|------|"
+          } > "$summary_file"
 
-          python3 .github/scripts/evaluate_zap_report.py \
-            --report dast/reports/zap-report.json \
-            --summary-file "$summary_file" \
-            --target-ref "$TARGET_REF" \
-            --marker "<!-- dast-pr-comment -->" \
-            --run-url "$ACTIONS_RUN_URL" \
-            --fail-on High
+          for mode in "Direct (no WAF):dast/reports/direct/zap-report.json" "Via WAF:dast/reports/waf/zap-report.json"; do
+            label="${mode%%:*}"
+            report="${mode##*:}"
+
+            if [ ! -f "$report" ]; then
+              echo "| ${label} | — | — | — | ❌ report missing |" >> "$summary_file"
+              gate_failed=1
+              continue
+            fi
+
+            counts=$(python3 -c "
+          import json
+          with open('${report}') as f:
+              d = json.load(f)
+          h=m=l=0
+          for s in d.get('site',[]):
+              for a in s.get('alerts',[]):
+                  r=a.get('riskdesc','')
+                  if r.startswith('High'): h+=1
+                  elif r.startswith('Medium'): m+=1
+                  elif r.startswith('Low'): l+=1
+          print(h,m,l)
+          ")
+            high=$(echo $counts | cut -d' ' -f1)
+            med=$(echo $counts  | cut -d' ' -f2)
+            low=$(echo $counts  | cut -d' ' -f3)
+
+            if [ "$high" -gt 0 ]; then
+              gate="❌ Failed (${high} High)"
+              gate_failed=1
+            else
+              gate="✅ Passed"
+            fi
+
+            echo "| ${label} | ${high} | ${med} | ${low} | ${gate} |" >> "$summary_file"
+          done
+
+          {
+            echo ""
+            echo "**Branch:** \`${TARGET_REF}\` — [View run](${ACTIONS_RUN_URL})"
+          } >> "$summary_file"
 
           cat "$summary_file" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$gate_failed" -gt 0 ]; then
+            echo "Gate failed: High severity findings detected or report missing." >&2
+            exit 1
+          fi
 
       - name: Comment DAST report on PR
         if: github.event_name == 'pull_request' && always()
@@ -382,25 +453,3 @@ jobs:
               bodyPath: `${process.env.RUNNER_TEMP}/dast-summary.md`,
               marker: '<!-- dast-pr-comment -->',
             });
-
-      - name: Clean up Docker containers
-        if: always()
-        run: |
-          docker stop frontend waf backend postgres || true
-          docker rm  frontend waf backend postgres || true
-          docker network rm dast-network || true
-
-  # Sentinel: satisfies the "OWASP ZAP Baseline" required status check
-  zap-baseline:
-    name: OWASP ZAP Baseline
-    runs-on: ubuntu-latest
-    needs: [zap-direct, zap-via-waf]
-    if: always()
-    steps:
-      - name: Check results
-        run: |
-          if [[ "${{ needs.zap-direct.result }}" == "failure" || "${{ needs.zap-via-waf.result }}" == "failure" ]]; then
-            echo "DAST job failed." >&2
-            exit 1
-          fi
-          echo "DAST job passed."
