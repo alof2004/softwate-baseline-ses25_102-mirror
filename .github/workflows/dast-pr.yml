@@ -17,6 +17,143 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ── Job 1: ZAP directly against the application (no WAF) ──────────────────
+  zap-direct:
+    name: OWASP ZAP — Direct (no WAF)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Create Docker network
+        run: docker network create dast-direct-network
+
+      - name: Start PostgreSQL database
+        run: |
+          docker run -d \
+            --name postgres-direct \
+            --network dast-direct-network \
+            -e POSTGRES_DB=clinic_db \
+            -e POSTGRES_USER=clinic_user \
+            -e POSTGRES_PASSWORD=clinic_pass \
+            postgres:16-alpine
+
+          for i in {1..30}; do
+            if docker exec postgres-direct pg_isready -U clinic_user -d clinic_db >/dev/null 2>&1; then
+              echo "PostgreSQL is ready!"; break
+            fi
+            echo "Attempt $i: waiting..."; sleep 2
+          done
+
+      - name: Build and start backend
+        run: |
+          docker build -t clinic-backend:dast-direct ./src/backend
+          docker run -d \
+            --name backend-direct \
+            --network dast-direct-network \
+            -p 18080:8080 \
+            -e SERVER_PORT=8080 \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-direct:5432/clinic_db \
+            -e SPRING_DATASOURCE_USERNAME=clinic_user \
+            -e SPRING_DATASOURCE_PASSWORD=clinic_pass \
+            -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+            -e KEYCLOAK_JWKS_URI=http://localhost:8180/realms/clinic/protocol/openid-connect/certs \
+            -e KEYCLOAK_ISSUER_URI=http://localhost:8180/realms/clinic \
+            -e CORS_ALLOWED_ORIGINS=http://localhost:15173 \
+            clinic-backend:dast-direct
+
+      - name: Build and start frontend
+        run: |
+          docker build -t clinic-frontend:dast-direct \
+            --build-arg VITE_API_BASE_URL=http://localhost:18080/api \
+            --build-arg VITE_KEYCLOAK_URL=http://localhost:8180 \
+            ./src/frontend
+          docker run -d \
+            --name frontend-direct \
+            --network dast-direct-network \
+            -p 15173:8080 \
+            clinic-frontend:dast-direct
+
+      - name: Wait for application to be ready
+        run: |
+          backend_url="http://localhost:18080/api/patients"
+          frontend_url="http://localhost:15173"
+          timeout_seconds=240
+          start_time="$(date +%s)"
+
+          while true; do
+            backend_status=$(curl -s -o /dev/null -w "%{http_code}" "${backend_url}" 2>/dev/null || echo "000")
+            frontend_ok=$(curl -fsS "${frontend_url}" >/dev/null 2>&1 && echo "yes" || echo "no")
+
+            if [[ "$backend_status" =~ ^[2-4][0-9][0-9]$ ]] && [ "$frontend_ok" = "yes" ]; then
+              echo "Stack is reachable (backend: ${backend_status})."; break
+            fi
+
+            now="$(date +%s)"
+            if [ $((now - start_time)) -ge "${timeout_seconds}" ]; then
+              echo "Timed out." >&2; docker logs backend-direct || true; docker logs frontend-direct || true; exit 1
+            fi
+            echo "backend=${backend_status} frontend=${frontend_ok} — retrying in 5s..."; sleep 5
+          done
+
+      - name: Run OWASP ZAP active scan (direct)
+        run: |
+          mkdir -p dast/reports/direct
+          chmod 0777 dast/reports/direct
+
+          set +e
+          docker run --rm \
+            --network dast-direct-network \
+            -v "$PWD/dast/reports/direct:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t "http://frontend-direct:8080" \
+            -a \
+            -j \
+            -I \
+            -m 2 \
+            -D 5 \
+            -r zap-report.html \
+            -J zap-report.json \
+            --autooff
+          scan_exit_code=$?
+          set -e
+
+          echo "ZAP exited with code ${scan_exit_code}."
+          if [ ! -f "dast/reports/direct/zap-report.json" ]; then
+            echo "ZAP did not produce the report." >&2; exit 1
+          fi
+
+      - name: Upload direct reports
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: dast-pr-direct-reports
+          path: dast/reports/direct/
+          if-no-files-found: warn
+
+      - name: Enforce DAST gate (direct)
+        run: |
+          high=$(python3 -c "
+          import json
+          with open('dast/reports/direct/zap-report.json') as f:
+              d = json.load(f)
+          print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskdesc','').startswith('High')))
+          ")
+          echo "High findings: ${high}"
+          if [ "${high}" -gt 0 ]; then
+            echo "Gate failed: ${high} High severity finding(s) detected." >&2; exit 1
+          fi
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker stop frontend-direct backend-direct postgres-direct || true
+          docker rm  frontend-direct backend-direct postgres-direct || true
+          docker network rm dast-direct-network || true
+
+  # ── Job 2: ZAP through Nginx + ModSecurity WAF ────────────────────────────
   zap-via-waf:
     name: OWASP ZAP — Via WAF (Nginx + ModSecurity CRS)
     runs-on: ubuntu-latest
@@ -257,12 +394,12 @@ jobs:
   zap-baseline:
     name: OWASP ZAP Baseline
     runs-on: ubuntu-latest
-    needs: [zap-via-waf]
+    needs: [zap-direct, zap-via-waf]
     if: always()
     steps:
       - name: Check results
         run: |
-          if [[ "${{ needs.zap-via-waf.result }}" == "failure" ]]; then
+          if [[ "${{ needs.zap-direct.result }}" == "failure" || "${{ needs.zap-via-waf.result }}" == "failure" ]]; then
             echo "DAST job failed." >&2
             exit 1
           fi
