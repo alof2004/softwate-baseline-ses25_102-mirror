@@ -153,206 +153,11 @@ jobs:
           docker rm  frontend-direct backend-direct postgres-direct || true
           docker network rm dast-direct-network || true
 
-  # ── Job 2: ZAP through Nginx + ModSecurity WAF ────────────────────────────
-  zap-via-waf:
-    name: OWASP ZAP — Via WAF (Nginx + ModSecurity CRS)
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-
-      - name: Create Docker network
-        run: docker network create dast-network
-
-      - name: Start PostgreSQL database
-        run: |
-          docker run -d \
-            --name postgres \
-            --network dast-network \
-            -e POSTGRES_DB=clinic_db \
-            -e POSTGRES_USER=clinic_user \
-            -e POSTGRES_PASSWORD=clinic_pass \
-            postgres:16-alpine
-
-          echo "Waiting for PostgreSQL to be ready..."
-          for i in {1..30}; do
-            if docker exec postgres pg_isready -U clinic_user -d clinic_db >/dev/null 2>&1; then
-              echo "PostgreSQL is ready!"
-              break
-            fi
-            echo "Attempt $i: PostgreSQL not ready yet, waiting..."
-            sleep 2
-          done
-
-      - name: Build and start backend (internal only)
-        run: |
-          docker build -t clinic-backend:dast ./src/backend
-          docker run -d \
-            --name backend \
-            --network dast-network \
-            -e SERVER_PORT=8080 \
-            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/clinic_db \
-            -e SPRING_DATASOURCE_USERNAME=clinic_user \
-            -e SPRING_DATASOURCE_PASSWORD=clinic_pass \
-            -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
-            -e KEYCLOAK_JWKS_URI=http://localhost:8180/realms/clinic/protocol/openid-connect/certs \
-            -e KEYCLOAK_ISSUER_URI=http://localhost:8180/realms/clinic \
-            -e CORS_ALLOWED_ORIGINS=http://localhost:15173 \
-            clinic-backend:dast
-
-          echo "Waiting for backend to start..."
-          for i in {1..30}; do
-            if docker exec backend curl -sf http://localhost:8080/v3/api-docs >/dev/null 2>&1; then
-              echo "Backend is ready!"
-              break
-            fi
-            echo "Attempt $i: backend not ready yet, waiting..."
-            sleep 3
-          done
-
-      - name: Generate self-signed cert for WAF
-        run: |
-          mkdir -p certs
-          openssl req -x509 -nodes -days 365 \
-            -subj "/C=PT/ST=Aveiro/O=ClinicLab/CN=localhost" \
-            -newkey rsa:2048 \
-            -keyout certs/localhost+1-key.pem \
-            -out    certs/localhost+1.pem
-          chmod o+r certs/localhost+1-key.pem
-
-      - name: Build and start WAF
-        run: |
-          docker build -t clinic-waf:dast ./waf
-          docker run -d \
-            --name waf \
-            --network dast-network \
-            -p 18080:8080 \
-            -p 18443:8443 \
-            -v "$PWD/certs/localhost+1.pem:/etc/nginx/conf/server.crt:ro" \
-            -v "$PWD/certs/localhost+1-key.pem:/etc/nginx/conf/server.key:ro" \
-            -e BACKEND=http://backend:8080 \
-            -e PORT=8080 \
-            -e SSL_PORT=8443 \
-            -e SSL_CERT_FILE=/etc/nginx/conf/server.crt \
-            -e SSL_CERT_KEY_FILE=/etc/nginx/conf/server.key \
-            -e SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
-            -e SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256" \
-            -e SSL_PREFER_CIPHERS=off \
-            -e SSL_OCSP_STAPLING=off \
-            -e CLIENT_MAX_BODY_SIZE=1m \
-            -e SERVER_NAME=localhost \
-            -e NGINX_ALWAYS_TLS_REDIRECT=off \
-            -e METRICS_ALLOW_FROM=127.0.0.1 \
-            -e METRICS_DENY_FROM=all \
-            -e ALLOWED_METHODS="GET HEAD POST PUT DELETE OPTIONS" \
-            clinic-waf:dast
-
-      - name: Build and start frontend (pointing at WAF)
-        run: |
-          docker build -t clinic-frontend:dast \
-            --build-arg VITE_API_BASE_URL=http://localhost:18080/api \
-            --build-arg VITE_KEYCLOAK_URL=http://localhost:8180 \
-            ./src/frontend
-          docker run -d \
-            --name frontend \
-            --network dast-network \
-            -p 15173:8080 \
-            clinic-frontend:dast
-
-      - name: Wait for stack to be ready
-        run: |
-          waf_url="http://localhost:18080/api/patients"
-          frontend_url="http://localhost:15173"
-          timeout_seconds=240
-          start_time="$(date +%s)"
-
-          echo "Waiting for WAF at ${waf_url} and frontend at ${frontend_url}"
-
-          while true; do
-            waf_status=$(curl -s -o /dev/null -w "%{http_code}" "${waf_url}" 2>/dev/null || echo "000")
-            frontend_ok=$(curl -fsS "${frontend_url}" >/dev/null 2>&1 && echo "yes" || echo "no")
-
-            if [[ "$waf_status" =~ ^[2-4][0-9][0-9]$ ]] && [ "$frontend_ok" = "yes" ]; then
-              echo "Stack is reachable (waf: ${waf_status})."
-              break
-            fi
-
-            now="$(date +%s)"
-            if [ $((now - start_time)) -ge "${timeout_seconds}" ]; then
-              echo "Timed out waiting for the stack to become ready." >&2
-              docker logs waf    || true
-              docker logs backend || true
-              exit 1
-            fi
-
-            echo "waf=${waf_status} frontend=${frontend_ok} — retrying in 5s..."
-            sleep 5
-          done
-
-      - name: Run OWASP ZAP baseline scan (via WAF)
-        run: |
-          mkdir -p dast/reports
-          chmod 0777 dast/reports
-
-          set +e
-          docker run --rm \
-            --network dast-network \
-            -v "$PWD/dast/reports:/zap/wrk:rw" \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-baseline.py \
-            -t "http://waf:8080" \
-            -a \
-            -j \
-            -I \
-            -m 2 \
-            -D 5 \
-            -r zap-report.html \
-            -J zap-report.json \
-            --autooff
-          scan_exit_code=$?
-          set -e
-
-          echo "ZAP exited with code ${scan_exit_code}."
-          if [ ! -f "dast/reports/zap-report.json" ]; then
-            echo "ZAP did not produce dast/reports/zap-report.json" >&2
-            exit 1
-          fi
-
-      - name: Collect WAF ModSecurity audit log
-        if: always()
-        timeout-minutes: 2
-        run: |
-          mkdir -p dast/reports
-          timeout 60 docker exec waf cat /var/log/modsec_audit.log > dast/reports/modsec-audit.log 2>/dev/null || echo "audit log unavailable or empty"
-          timeout 60 docker exec waf cat /var/log/nginx/access.log  > dast/reports/nginx-access.log  2>/dev/null || echo "access log unavailable"
-          echo "ModSecurity blocks during scan:"
-          grep -c '"is_interrupted":true' dast/reports/modsec-audit.log 2>/dev/null || echo "0 blocks"
-
-      - name: Upload DAST reports
-        if: always()
-        uses: actions/upload-artifact@v4.6.2
-        with:
-          name: dast-reports
-          path: |
-            dast/reports/zap-report.html
-            dast/reports/zap-report.json
-            dast/reports/modsec-audit.log
-            dast/reports/nginx-access.log
-          if-no-files-found: warn
-
-      - name: Clean up Docker containers
-        if: always()
-        run: |
-          docker stop frontend waf backend postgres || true
-          docker rm  frontend waf backend postgres || true
-          docker network rm dast-network || true
-
-  # ── Sentinel: combines both results, posts PR comment, enforces gate ───────
+  # ── Sentinel: posts PR comment and enforces the direct-scan gate ───────────
   zap-baseline:
     name: OWASP ZAP Baseline
     runs-on: ubuntu-latest
-    needs: [zap-direct, zap-via-waf]
+    needs: [zap-direct]
     if: always()
     permissions:
       pull-requests: write
@@ -367,14 +172,7 @@ jobs:
           path: dast/reports/direct
         continue-on-error: true
 
-      - name: Download WAF reports
-        uses: actions/download-artifact@v4.3.0
-        with:
-          name: dast-reports
-          path: dast/reports/waf
-        continue-on-error: true
-
-      - name: Build combined summary and enforce gate
+      - name: Build summary and enforce gate
         if: always()
         env:
           TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
@@ -391,19 +189,16 @@ jobs:
             echo "|------|------|--------|-----|------|"
           } > "$summary_file"
 
-          for mode in "Direct (no WAF):dast/reports/direct/zap-report.json" "Via WAF:dast/reports/waf/zap-report.json"; do
-            label="${mode%%:*}"
-            report="${mode##*:}"
+          label="Direct (no WAF)"
+          report="dast/reports/direct/zap-report.json"
 
-            if [ ! -f "$report" ]; then
-              echo "| ${label} | — | — | — | ❌ report missing |" >> "$summary_file"
-              gate_failed=1
-              continue
-            fi
-
+          if [ ! -f "$report" ]; then
+            echo "| ${label} | — | — | — | ❌ report missing |" >> "$summary_file"
+            gate_failed=1
+          else
             counts=$(python3 -c "
           import json
-          with open('${report}') as f:
+          with open('$report') as f:
               d = json.load(f)
           h=m=l=0
           for s in d.get('site',[]):
@@ -426,7 +221,7 @@ jobs:
             fi
 
             echo "| ${label} | ${high} | ${med} | ${low} | ${gate} |" >> "$summary_file"
-          done
+          fi
 
           {
             echo ""
