@@ -636,33 +636,154 @@ jobs:
           SEMGREP_RESULT: ${{ needs.semgrep.result }}
           ESLINT_RESULT: ${{ needs.eslint-security.result }}
           TRIVY_RESULT: ${{ needs.trivy.result }}
+          TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
           ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
         run: |
-          cat > "$RUNNER_TEMP/sast-security-summary.md" << 'SUMMARY_EOF'
-          <!-- sast-security-summary -->
-          ## SAST Security Summary
-          SUMMARY_EOF
+          python3 - <<'PYEOF'
+          import os, json, re
+          from pathlib import Path
 
-          # Determine overall status
-          overall="✅ All checks passed"
-          if [ "$GITLEAKS_RESULT" = "failure" ] || [ "$SEMGREP_RESULT" = "failure" ] || \
-             [ "$ESLINT_RESULT" = "failure" ] || [ "$TRIVY_RESULT" = "failure" ]; then
-            overall="❌ One or more checks failed"
-          fi
+          def result_badge(r):
+              return "PASSED" if r == "success" else ("SKIPPED" if r == "skipped" else "FAILED")
 
-          cat >> "$RUNNER_TEMP/sast-security-summary.md" << EOF
-          **$overall**
+          def gate_icon(r):
+              return "+" if r == "success" else ("-" if r == "failure" else "~")
 
-          | Check | Result |
-          |-------|--------|
-          | Gitleaks | $( [ "$GITLEAKS_RESULT" = "success" ] && echo "✅ Passed" || echo "❌ Failed") |
-          | Semgrep | $( [ "$SEMGREP_RESULT" = "success" ] && echo "✅ Passed" || echo "❌ Failed") |
-          | ESLint Security | $( [ "$ESLINT_RESULT" = "success" ] && echo "✅ Passed" || echo "❌ Failed") |
-          | Trivy | $( [ "$TRIVY_RESULT" = "success" ] && echo "✅ Passed" || echo "❌ Failed") |
+          gitleaks = os.environ["GITLEAKS_RESULT"]
+          semgrep  = os.environ["SEMGREP_RESULT"]
+          eslint   = os.environ["ESLINT_RESULT"]
+          trivy    = os.environ["TRIVY_RESULT"]
+          run_url  = os.environ["ACTIONS_RUN_URL"]
+          ref      = os.environ["TARGET_REF"]
 
-          [View full run details]($ACTIONS_RUN_URL)
-          EOF
+          overall_pass = all(r in ("success", "skipped") for r in [gitleaks, semgrep, eslint, trivy])
+          overall_label = "ALL CHECKS PASSED" if overall_pass else "ONE OR MORE CHECKS FAILED"
+
+          # Parse Semgrep advisory findings
+          semgrep_findings = []
+          for sarif_path in Path("reports").glob("semgrep-pr-advisory*.sarif"):
+              try:
+                  data = json.loads(sarif_path.read_text())
+                  for run in data.get("runs", []):
+                      for result in run.get("results", []):
+                          rule_id = result.get("ruleId", "")
+                          msg = result.get("message", {}).get("text", "")[:80]
+                          locs = result.get("locations", [])
+                          loc = ""
+                          if locs:
+                              pl = locs[0].get("physicalLocation", {})
+                              uri = pl.get("artifactLocation", {}).get("uri", "")
+                              line = pl.get("region", {}).get("startLine", "")
+                              loc = f"`{uri}:{line}`" if line else f"`{uri}`"
+                          semgrep_findings.append((rule_id, msg, loc))
+              except Exception:
+                  pass
+
+          # Parse ESLint findings
+          eslint_findings = []
+          eslint_path = Path("reports/eslint-security.json")
+          if eslint_path.exists():
+              try:
+                  data = json.loads(eslint_path.read_text())
+                  for file_result in data:
+                      fp = file_result.get("filePath", "").replace(os.getcwd(), "").lstrip("/")
+                      for msg in file_result.get("messages", []):
+                          sev = "ERROR" if msg.get("severity") == 2 else "WARN"
+                          rule = msg.get("ruleId", "")
+                          line = msg.get("line", "")
+                          eslint_findings.append((sev, rule, f"`{fp}:{line}`"))
+              except Exception:
+                  pass
+
+          # Parse Trivy advisory findings
+          trivy_findings = []
+          for trivy_path in Path("reports").glob("*advisory*"):
+              try:
+                  data = json.loads(trivy_path.read_text())
+                  for run in data.get("runs", []):
+                      for result in run.get("results", []):
+                          rule_id = result.get("ruleId", "")
+                          msg = result.get("message", {}).get("text", "")[:80]
+                          trivy_findings.append((rule_id, msg))
+              except Exception:
+                  pass
+
+          lines = []
+          lines.append("<!-- sast-security-summary -->")
+          lines.append("## SAST Security Summary")
+          lines.append("")
+          lines.append(f"**Branch:** `{ref}` — [View run]({run_url})")
+          lines.append("")
+          lines.append(f"**Overall: {overall_label}**")
+          lines.append("")
+          lines.append("---")
+          lines.append("")
+          lines.append("### Gate Results")
+          lines.append("")
+          lines.append("| Scanner | Level | Gate | Advisory findings |")
+          lines.append("|---------|-------|------|-------------------|")
+          lines.append(f"| Gitleaks | Pre-commit + PR | {result_badge(gitleaks)} | Secrets scan — no findings expected |")
+          lines.append(f"| Semgrep | PR | {result_badge(semgrep)} | {len(semgrep_findings)} advisory finding(s) |")
+          lines.append(f"| ESLint Security | PR | {result_badge(eslint)} | {len(eslint_findings)} warning(s) |")
+          lines.append(f"| Trivy FS | PR | {result_badge(trivy)} | {len(trivy_findings)} advisory finding(s) |")
+          lines.append("")
+
+          if semgrep_findings:
+              lines.append("---")
+              lines.append("")
+              lines.append("### Semgrep Advisory Findings")
+              lines.append("")
+              lines.append("| Rule | Message | Location |")
+              lines.append("|------|---------|----------|")
+              for rule, msg, loc in semgrep_findings[:10]:
+                  lines.append(f"| `{rule}` | {msg} | {loc} |")
+              if len(semgrep_findings) > 10:
+                  lines.append(f"| ... | *{len(semgrep_findings) - 10} more — see artifact* | |")
+              lines.append("")
+
+          if eslint_findings:
+              lines.append("---")
+              lines.append("")
+              lines.append("### ESLint Security Findings")
+              lines.append("")
+              lines.append("| Severity | Rule | Location |")
+              lines.append("|----------|------|----------|")
+              for sev, rule, loc in eslint_findings[:10]:
+                  lines.append(f"| {sev} | `{rule}` | {loc} |")
+              if len(eslint_findings) > 10:
+                  lines.append(f"| ... | *{len(eslint_findings) - 10} more — see artifact* | |")
+              lines.append("")
+
+          if trivy_findings:
+              lines.append("---")
+              lines.append("")
+              lines.append("### Trivy Advisory Findings")
+              lines.append("")
+              lines.append("| CVE / Rule | Detail |")
+              lines.append("|------------|--------|")
+              for rule, msg in trivy_findings[:10]:
+                  lines.append(f"| `{rule}` | {msg} |")
+              if len(trivy_findings) > 10:
+                  lines.append(f"| ... | *{len(trivy_findings) - 10} more — see artifact* | |")
+              lines.append("")
+
+          lines.append("---")
+          lines.append("")
+          lines.append("> Gate failures block merge. Advisory findings are informational.")
+
+          body = "\n".join(lines)
+
+          summary_path = os.path.join(os.environ["RUNNER_TEMP"], "sast-security-summary.md")
+          Path(summary_path).write_text(body)
+
+          # Also write to GitHub Actions step summary
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY", "")
+          if step_summary:
+              with open(step_summary, "a") as f:
+                  f.write(body + "\n")
+
+          PYEOF
 
       - name: Post SAST security summary to PR
         uses: actions/github-script@v7
