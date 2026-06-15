@@ -492,6 +492,37 @@ jobs:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
 
+      - name: Export SonarQube issues to artifact
+        if: always()
+        env:
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+        run: |
+          mkdir -p reports
+          curl -sf -H "Authorization: Bearer ${SONAR_TOKEN}" \
+            "${SONAR_HOST_URL}/api/issues/search?componentKeys=clinic-management-app&resolved=false&ps=500" \
+            -o reports/sonarqube-issues.json || echo '{"issues":[]}' > reports/sonarqube-issues.json
+
+          python3 - <<'EOF'
+          import json
+          with open("reports/sonarqube-issues.json") as f:
+              data = json.load(f)
+          issues = data.get("issues", [])
+          print(f"Total issues: {len(issues)}")
+          for sev in ["BLOCKER","CRITICAL","MAJOR","MINOR","INFO"]:
+              count = sum(1 for i in issues if i.get("severity") == sev)
+              if count:
+                  print(f"  {sev}: {count}")
+          EOF
+
+      - name: Upload SonarQube issues report
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: sonarqube-issues-report
+          path: reports/sonarqube-issues.json
+          if-no-files-found: warn
+
       - name: Build SonarQube PR comment
         if: github.event_name == 'pull_request' && always()
         env:
