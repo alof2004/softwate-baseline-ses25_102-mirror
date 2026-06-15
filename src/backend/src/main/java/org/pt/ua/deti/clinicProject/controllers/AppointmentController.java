@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/appointments")
 public class AppointmentController {
+    private static final String RESOURCE = "appointments";
+
     private final AppointmentService appointmentService;
     private final AuditLogService auditLogService;
 
@@ -76,7 +78,7 @@ public class AppointmentController {
         a.setDoctorSub(dto.doctorSub());
         return appointmentService.create(patientId, a)
                 .map(created -> {
-                    auditLogService.log("CREATE", "appointments", String.valueOf(created.getId()));
+                    auditLogService.log("CREATE", RESOURCE, String.valueOf(created.getId()));
                     return ResponseEntity.status(HttpStatus.CREATED).body(AppointmentResponseDTO.fromEntity(created));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -93,7 +95,7 @@ public class AppointmentController {
         a.setStatus(dto.status());
         return appointmentService.update(id, a)
                 .map(updated -> {
-                    auditLogService.log("UPDATE", "appointments", String.valueOf(id));
+                    auditLogService.log("UPDATE", RESOURCE, String.valueOf(id));
                     return ResponseEntity.ok(AppointmentResponseDTO.fromEntity(updated));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -106,7 +108,7 @@ public class AppointmentController {
         if (!appointmentService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
-        auditLogService.log("DELETE", "appointments", String.valueOf(id));
+        auditLogService.log("DELETE", RESOURCE, String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
 }

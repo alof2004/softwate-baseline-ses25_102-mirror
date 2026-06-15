@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
+    private static final String RESOURCE = "patients";
+
     private final PatientService patientService;
     private final AuditLogService auditLogService;
 
@@ -63,7 +65,7 @@ public class PatientController {
         p.setPhoneNumber(dto.phoneNumber());
         p.setEmail(dto.email());
         Patient created = patientService.create(p);
-        auditLogService.log("CREATE", "patients", String.valueOf(created.getId()));
+        auditLogService.log("CREATE", RESOURCE, String.valueOf(created.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(PatientResponseDTO.fromEntity(created));
     }
 
@@ -78,7 +80,7 @@ public class PatientController {
         p.setEmail(dto.email());
         return patientService.update(id, p)
                 .map(updated -> {
-                    auditLogService.log("UPDATE", "patients", String.valueOf(id));
+                    auditLogService.log("UPDATE", RESOURCE, String.valueOf(id));
                     return ResponseEntity.ok(PatientResponseDTO.fromEntity(updated));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -91,7 +93,7 @@ public class PatientController {
         if (!patientService.delete(id)) {
             return ResponseEntity.notFound().build();
         }
-        auditLogService.log("DELETE", "patients", String.valueOf(id));
+        auditLogService.log("DELETE", RESOURCE, String.valueOf(id));
         return ResponseEntity.noContent().build();
     }
 }
