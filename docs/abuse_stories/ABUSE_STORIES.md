@@ -16,6 +16,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 
 ![AS-01 Abuse Tree](images/AS-01_unauthorized-data-access.png)
 
+**Part 2 Regression:**
+
+![AS-01 Regression](images/AS-01_regression.png)
+
 ---
 
 ## AS-02 — Link Patient Identity to Appointment History
@@ -29,6 +33,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Part 2 Status** | **Prevented** — Authentication required; RBAC restricts cross-patient data access. |
 
 ![AS-02 Abuse Tree](images/AS-02_linking-and-inference.png)
+
+**Part 2 Regression:**
+
+![AS-02 Regression](images/AS-02_regression.png)
 
 ---
 
@@ -44,6 +52,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 
 ![AS-03 Abuse Tree](images/AS-03_patient-enumeration.png)
 
+**Part 2 Regression:**
+
+![AS-03 Regression](images/AS-03_regression.png)
+
 ---
 
 ## AS-04 — Infer a Patient's Health Condition from Appointment Metadata
@@ -57,6 +69,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Part 2 Status** | **Prevented** — Requires authentication; RBAC limits which roles can query appointments by patient name. |
 
 ![AS-04 Abuse Tree](images/AS-04_inference-from-metadata.png)
+
+**Part 2 Regression:**
+
+![AS-04 Regression](images/AS-04_regression.png)
 
 ---
 
@@ -72,6 +88,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 
 ![AS-05 Abuse Tree](images/AS-05_modify-records.png)
 
+**Part 2 Regression:**
+
+![AS-05 Regression](images/AS-05_regression.png)
+
 ---
 
 ## AS-06 — Destroy Patient Records Through Cascade Deletion
@@ -85,6 +105,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Part 2 Status** | **Prevented** — DELETE requires ADMIN role. Soft-delete is implemented: `Patient` and `Appointment` carry a `deleted_at` timestamp; deletion sets this field instead of issuing a SQL DELETE. `@SQLRestriction` filters soft-deleted records from all queries. Data is never permanently destroyed by a single API call. |
 
 ![AS-06 Abuse Tree](images/AS-06_cascade-deletion.png)
+
+**Part 2 Regression:**
+
+![AS-06 Regression](images/AS-06_regression.png)
 
 ---
 
@@ -100,6 +124,10 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 
 ![AS-07 Abuse Tree](images/AS-07_undetectable-actions.png)
 
+**Part 2 Regression:**
+
+![AS-07 Regression](images/AS-07_regression.png)
+
 ---
 
 ## AS-08 — Overload the API with Repeated Requests
@@ -113,3 +141,7 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Part 2 Status** | **Prevented** — Dual-layer rate limiting: Nginx `limit_req_zone` (30 req/s burst / 10 req/s sustained per IP at the perimeter) and Spring `RateLimitFilter` (60 req/min per IP at the application layer). ModSecurity CRS request-body limits (1 MB) further constrain large-payload abuse. |
 
 ![AS-08 Abuse Tree](images/AS-08_api-overload.png)
+
+**Part 2 Regression:**
+
+![AS-08 Regression](images/AS-08_regression.png)
