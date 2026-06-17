@@ -48,7 +48,7 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Abuse Case** | As a malicious external user, I want to use personal identifiers stored in the system so that I can directly identify a patient and associate their appointment information with a real individual. |
 | **How** | The attacker accesses records containing direct identifiers (name, email, phone, date of birth). Patient IDs are sequential integers starting at 1, making full enumeration via `/api/patients/{id}` trivial with no rate limiting or authentication. |
 | **Impact** | A real individual can be directly identified and their full appointment history retrieved. |
-| **Part 2 Status** | **Prevented** — Authentication blocks unauthenticated enumeration. `RateLimitFilter` limits authenticated callers to 60 req/min. Sequential IDs remain (future work: UUIDs). |
+| **Part 2 Status** | **Prevented** — Authentication blocks unauthenticated enumeration. `RateLimitFilter` limits authenticated callers to 100 req/min. UUID primary keys replace sequential integers, eliminating the IDOR enumeration oracle entirely. |
 
 ![AS-03 Abuse Tree](images/AS-03_patient-enumeration.png)
 
@@ -138,7 +138,7 @@ Derived from LINDDUN privacy threat analysis. Each story maps to one or more STR
 | **Abuse Case** | As an attacker, I want to flood patient and appointment endpoints with repeated requests so that I can make the system slow or unavailable for legitimate users. |
 | **How** | The attacker automates repeated API requests. No rate limiting existed, and `GET /api/appointments` with no filters triggered a full table scan exhausting the HikariCP connection pool (~10 connections). |
 | **Impact** | The system becomes slow or unavailable for normal clinical use. |
-| **Part 2 Status** | **Prevented** — Dual-layer rate limiting: Nginx `limit_req_zone` (30 req/s burst / 10 req/s sustained per IP at the perimeter) and Spring `RateLimitFilter` (60 req/min per IP at the application layer). ModSecurity CRS request-body limits (1 MB) further constrain large-payload abuse. |
+| **Part 2 Status** | **Prevented** — Dual-layer rate limiting: Nginx `limit_req_zone` (30 req/s burst / 10 req/s sustained per IP at the perimeter) and Spring `RateLimitFilter` (100 req/min per IP at the application layer). ModSecurity CRS request-body limits (1 MB) further constrain large-payload abuse. |
 
 ![AS-08 Abuse Tree](images/AS-08_api-overload.png)
 
