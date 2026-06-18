@@ -42,6 +42,9 @@ public class Appointment {
     @Column
     private String doctorSub;
 
+    @Column
+    private String createdBy;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "patient_id", nullable = false)
     @JsonBackReference

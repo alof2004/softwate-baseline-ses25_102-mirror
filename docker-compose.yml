@@ -7,8 +7,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${DB_PORT}:5432"
+    # DB port is NOT exposed on the host — backend connects via internal Docker network only.
+    # Uncomment only for local debugging.
+    # ports:
+    #   - "${DB_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
