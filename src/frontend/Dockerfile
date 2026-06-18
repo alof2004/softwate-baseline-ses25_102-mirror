@@ -12,8 +12,12 @@ RUN npm run build
 
 # Stage 2 — serve with Nginx
 FROM nginx:1.28-alpine
-RUN apk upgrade --no-cache
+RUN apk update \
+    && apk del nginx-module-acme nginx-module-geoip nginx-module-image-filter nginx-module-njs nginx-module-xslt 2>/dev/null || true; \
+    apk add --no-cache --upgrade 'nginx>=1.28.3-r3' 'libcrypto3>=3.5.6-r0' 'libssl3>=3.5.6-r0' 'musl>=1.2.5-r23' 'musl-utils>=1.2.5-r23' 'zlib>=1.3.2-r0'
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:80/ || exit 1
 USER nginx

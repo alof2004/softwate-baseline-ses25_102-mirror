@@ -33,6 +33,7 @@ public class SecurityConfig {
     private String allowedOrigins;
 
     @Bean
+    @SuppressWarnings("java:S112")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))

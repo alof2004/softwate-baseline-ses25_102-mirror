@@ -40,6 +40,13 @@ public class AppointmentService {
     }
 
     public Optional<Appointment> create(UUID patientId, Appointment appointment) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // DOCTOR: doctorSub forced from JWT — client cannot override it.
+        if (isDoctor(auth)) {
+            appointment.setDoctorSub(auth.getName());
+        }
+        // Track who created the appointment for object-level enforcement on write ops.
+        appointment.setCreatedBy(auth.getName());
         return patientRepository
                 .findById(patientId)
                 .map(patient -> {
@@ -52,7 +59,7 @@ public class AppointmentService {
     public Optional<Appointment> update(UUID id, Appointment appointment) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return appointmentRepository.findById(id)
-                .filter(a -> canAccess(auth, a))
+                .filter(a -> canWrite(auth, a))
                 .flatMap(existing -> {
                     existing.setDateTime(appointment.getDateTime());
                     existing.setSpecialty(appointment.getSpecialty());
@@ -71,11 +78,14 @@ public class AppointmentService {
     }
 
     public boolean delete(UUID id) {
-        return appointmentRepository.findById(id).map(appointment -> {
-            appointment.setDeletedAt(LocalDateTime.now());
-            appointmentRepository.save(appointment);
-            return true;
-        }).orElse(false);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return appointmentRepository.findById(id)
+                .filter(a -> canWrite(auth, a))
+                .map(appointment -> {
+                    appointment.setDeletedAt(LocalDateTime.now());
+                    appointmentRepository.save(appointment);
+                    return true;
+                }).orElse(false);
     }
 
     public List<Appointment> search(
@@ -115,7 +125,21 @@ public class AppointmentService {
     }
 
     private boolean canAccess(Authentication auth, Appointment appointment) {
-        if (!isDoctor(auth)) return true;
-        return auth.getName().equals(appointment.getDoctorSub());
+        if (isAdmin(auth)) return true;
+        if (isDoctor(auth)) return auth.getName().equals(appointment.getDoctorSub());
+        // RECEPTIONIST: read access to all appointments (needed for scheduling)
+        return true;
+    }
+
+    private boolean canWrite(Authentication auth, Appointment appointment) {
+        if (isAdmin(auth)) return true;
+        if (isDoctor(auth)) return auth.getName().equals(appointment.getDoctorSub());
+        // RECEPTIONIST: write access only to appointments they created
+        return auth.getName().equals(appointment.getCreatedBy());
+    }
+
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }
