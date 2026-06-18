@@ -134,6 +134,97 @@ jobs:
           path: dast/reports/direct/
           if-no-files-found: warn
 
+      - name: Build direct DAST PR summary
+        if: always()
+        env:
+          TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          marker = "<!-- dast-pr-direct-comment -->"
+          report_path = Path("dast/reports/direct/zap-report.json")
+          summary_path = Path(os.environ["RUNNER_TEMP"]) / "dast-direct-summary.md"
+          lines = [
+              marker,
+              "## DAST Direct Scan Report",
+              "",
+              f"**Branch:** `{os.environ['TARGET_REF']}` - [View run]({os.environ['ACTIONS_RUN_URL']})",
+              "",
+          ]
+
+          if not report_path.exists():
+              lines.extend([
+                  "| High | Medium | Low | Informational | Gate |",
+                  "|-----:|-------:|----:|--------------:|------|",
+                  "| n/a | n/a | n/a | n/a | FAILED - report missing |",
+              ])
+          else:
+              data = json.loads(report_path.read_text())
+              counts = {"High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+              alert_types = {}
+              for site in data.get("site", []):
+                  for alert in site.get("alerts", []):
+                      risk = alert.get("riskdesc") or alert.get("risk") or "Informational"
+                      severity = risk.split(" ", 1)[0]
+                      if severity == "Info":
+                          severity = "Informational"
+                      if severity not in counts:
+                          severity = "Informational"
+
+                      key = (alert.get("pluginid"), alert.get("name"), severity)
+                      if key not in alert_types:
+                          counts[severity] += 1
+                          alert_types[key] = {
+                              "name": alert.get("name", "Unknown alert"),
+                              "severity": severity,
+                              "instances": 0,
+                          }
+                      alert_types[key]["instances"] += len(alert.get("instances", []))
+
+              gate = f"FAILED ({counts['High']} High)" if counts["High"] else "PASSED"
+              lines.extend([
+                  "| High | Medium | Low | Informational | Gate |",
+                  "|-----:|-------:|----:|--------------:|------|",
+                  f"| {counts['High']} | {counts['Medium']} | {counts['Low']} | {counts['Informational']} | {gate} |",
+              ])
+
+              alerts = sorted(
+                  alert_types.values(),
+                  key=lambda item: (
+                      {"High": 3, "Medium": 2, "Low": 1, "Informational": 0}[item["severity"]] * -1,
+                      item["name"],
+                  ),
+              )
+              if alerts:
+                  lines.extend(["", "### Alert Types", "", "| Alert | Severity | Instances |", "| --- | --- | ---: |"])
+                  for alert in alerts[:25]:
+                      lines.append(f"| {alert['name']} | {alert['severity']} | {alert['instances']} |")
+                  if len(alerts) > 25:
+                      lines.append(f"| ... {len(alerts) - 25} more alert type(s) omitted | | |")
+
+          summary_path.write_text("\n".join(lines) + "\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as step_summary:
+              step_summary.write("\n".join(lines[1:]) + "\n")
+          PY
+
+      - name: Comment direct DAST report on PR
+        if: github.event_name == 'pull_request' && always()
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const upsertPrComment = require('./.github/scripts/upsert_pr_comment.js');
+            await upsertPrComment({
+              github,
+              context,
+              bodyPath: `${process.env.RUNNER_TEMP}/dast-direct-summary.md`,
+              marker: '<!-- dast-pr-direct-comment -->',
+            });
+
       - name: Enforce DAST gate (direct)
         run: |
           high=$(python3 -c "
@@ -154,124 +245,273 @@ jobs:
           docker rm  frontend-direct backend-direct postgres-direct || true
           docker network rm dast-direct-network || true
 
-  # ── Sentinel: posts PR comment and enforces the direct-scan gate ───────────
-  zap-baseline:
-    name: OWASP ZAP Baseline
+  # ── Job 2: ZAP through Nginx + ModSecurity WAF ────────────────────────────
+  zap-via-waf:
+    name: OWASP ZAP — Via WAF (Nginx + ModSecurity CRS)
     runs-on: ubuntu-latest
-    needs: [zap-direct]
-    if: always()
-    permissions:
-      actions: read
-      issues: write
-      pull-requests: write
+    timeout-minutes: 45
     steps:
-      - name: Download direct reports
-        uses: actions/download-artifact@v4.3.0
-        with:
-          name: dast-pr-direct-reports
-          path: dast/reports/direct
-        continue-on-error: true
+      - name: Check out repository
+        uses: actions/checkout@v5
 
-      - name: Build summary and enforce gate
+      - name: Create Docker network
+        run: docker network create dast-waf-network
+
+      - name: Start PostgreSQL database
+        run: |
+          docker run -d \
+            --name postgres-waf \
+            --network dast-waf-network \
+            -e POSTGRES_DB=clinic_db \
+            -e POSTGRES_USER=clinic_user \
+            -e POSTGRES_PASSWORD=clinic_pass \
+            postgres:16-alpine
+
+          for i in {1..30}; do
+            if docker exec postgres-waf pg_isready -U clinic_user -d clinic_db >/dev/null 2>&1; then
+              echo "PostgreSQL is ready!"; break
+            fi
+            echo "Attempt $i: waiting..."; sleep 2
+          done
+
+      - name: Build and start backend (internal only)
+        run: |
+          docker build -t clinic-backend:dast-waf ./src/backend
+          docker run -d \
+            --name backend-waf \
+            --network dast-waf-network \
+            -e SERVER_PORT=8080 \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-waf:5432/clinic_db \
+            -e SPRING_DATASOURCE_USERNAME=clinic_user \
+            -e SPRING_DATASOURCE_PASSWORD=clinic_pass \
+            -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+            -e KEYCLOAK_JWKS_URI=http://localhost:8180/realms/clinic/protocol/openid-connect/certs \
+            -e KEYCLOAK_ISSUER_URI=http://localhost:8180/realms/clinic \
+            -e CORS_ALLOWED_ORIGINS=https://localhost:18443 \
+            clinic-backend:dast-waf
+
+          for i in {1..40}; do
+            if docker exec backend-waf curl -sf http://localhost:8080/v3/api-docs >/dev/null 2>&1; then
+              echo "Backend is ready!"; break
+            fi
+            echo "Attempt $i: waiting..."; sleep 3
+          done
+
+      - name: Generate self-signed cert for WAF
+        run: |
+          mkdir -p certs
+          openssl req -x509 -nodes -days 365 \
+            -subj "/C=PT/ST=Aveiro/O=ClinicLab/CN=localhost" \
+            -newkey rsa:2048 \
+            -keyout certs/localhost+1-key.pem \
+            -out    certs/localhost+1.pem
+          chmod o+r certs/localhost+1-key.pem
+
+      - name: Build and start WAF
+        run: |
+          docker build -t clinic-waf:dast ./waf
+          docker run -d \
+            --name waf-pr \
+            --network dast-waf-network \
+            -p 18080:8080 \
+            -p 18443:8443 \
+            -v "$PWD/certs/localhost+1.pem:/etc/nginx/conf/server.crt:ro" \
+            -v "$PWD/certs/localhost+1-key.pem:/etc/nginx/conf/server.key:ro" \
+            -e BACKEND=http://backend-waf:8080 \
+            -e PORT=8080 \
+            -e SSL_PORT=8443 \
+            -e SSL_CERT_FILE=/etc/nginx/conf/server.crt \
+            -e SSL_CERT_KEY_FILE=/etc/nginx/conf/server.key \
+            -e SSL_PROTOCOLS="TLSv1.2 TLSv1.3" \
+            -e SSL_CIPHERS="ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256" \
+            -e SSL_PREFER_CIPHERS=off \
+            -e SSL_OCSP_STAPLING=off \
+            -e CLIENT_MAX_BODY_SIZE=1m \
+            -e SERVER_NAME=localhost \
+            -e NGINX_ALWAYS_TLS_REDIRECT=off \
+            -e METRICS_ALLOW_FROM=127.0.0.1 \
+            -e METRICS_DENY_FROM=all \
+            -e ALLOWED_METHODS="GET HEAD POST PUT DELETE OPTIONS" \
+            clinic-waf:dast
+
+      - name: Wait for WAF to be ready
+        run: |
+          waf_url="https://localhost:18443/v3/api-docs"
+          timeout_seconds=240
+          start_time="$(date +%s)"
+
+          while true; do
+            waf_status=$(curl -k -s -o /dev/null -w "%{http_code}" "${waf_url}" 2>/dev/null || echo "000")
+
+            if [[ "$waf_status" =~ ^[2-4][0-9][0-9]$ ]]; then
+              echo "WAF is reachable (${waf_status})."; break
+            fi
+
+            now="$(date +%s)"
+            if [ $((now - start_time)) -ge "${timeout_seconds}" ]; then
+              echo "Timed out." >&2; docker logs waf-pr || true; docker logs backend-waf || true; exit 1
+            fi
+            echo "waf=${waf_status} — retrying in 5s..."; sleep 5
+          done
+
+      - name: Run OWASP ZAP active scan (via WAF)
+        run: |
+          mkdir -p dast/reports/waf
+          chmod 0777 dast/reports/waf
+
+          set +e
+          docker run --rm \
+            --network dast-waf-network \
+            -v "$PWD/dast/reports/waf:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t "https://waf-pr:8443/v3/api-docs" \
+            -a \
+            -j \
+            -I \
+            -m 2 \
+            -D 5 \
+            -r zap-waf-report.html \
+            -J zap-waf-report.json \
+            --autooff
+          scan_exit_code=$?
+          set -e
+
+          echo "ZAP exited with code ${scan_exit_code}."
+          if [ ! -f "dast/reports/waf/zap-waf-report.json" ]; then
+            echo "ZAP did not produce the report." >&2; exit 1
+          fi
+
+      - name: Collect WAF logs
+        if: always()
+        timeout-minutes: 2
+        run: |
+          mkdir -p dast/reports/waf
+          timeout 60 docker exec waf-pr cat /var/log/modsec_audit.log > dast/reports/waf/modsec-audit.log 2>/dev/null || echo "audit log unavailable"
+          timeout 60 docker exec waf-pr cat /var/log/nginx/access.log  > dast/reports/waf/nginx-access.log  2>/dev/null || echo "access log unavailable"
+          echo "ModSecurity blocks during scan:"
+          grep -c '"is_interrupted":true' dast/reports/waf/modsec-audit.log 2>/dev/null || echo "0 blocks"
+
+      - name: Upload WAF reports
+        if: always()
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: dast-pr-waf-reports
+          path: dast/reports/waf/
+          if-no-files-found: warn
+
+      - name: Build WAF DAST PR summary
         if: always()
         env:
           TARGET_REF: ${{ github.event.pull_request.head.ref || github.ref_name }}
           ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          summary_file="$RUNNER_TEMP/dast-summary.md"
-          gate_failed=0
-
-          {
-            echo "<!-- dast-pr-comment -->"
-            echo "## DAST Scan Summary"
-            echo ""
-            echo "| Mode | High | Medium | Low | Gate |"
-            echo "|------|------|--------|-----|------|"
-          } > "$summary_file"
-
-          label="Direct (no WAF)"
-          report="dast/reports/direct/zap-report.json"
-
-          if [ ! -f "$report" ]; then
-            echo "| ${label} | — | — | — | ❌ report missing |" >> "$summary_file"
-            gate_failed=1
-          else
-            counts=$(python3 -c "
+          python3 - <<'PY'
           import json
-          with open('$report') as f:
-              d = json.load(f)
-          h=m=l=0
-          for s in d.get('site',[]):
-              for a in s.get('alerts',[]):
-                  r=a.get('riskdesc','')
-                  if r.startswith('High'): h+=1
-                  elif r.startswith('Medium'): m+=1
-                  elif r.startswith('Low'): l+=1
-          print(h,m,l)
-          ")
-            high=$(echo $counts | cut -d' ' -f1)
-            med=$(echo $counts  | cut -d' ' -f2)
-            low=$(echo $counts  | cut -d' ' -f3)
+          import os
+          from pathlib import Path
 
-            if [ "$high" -gt 0 ]; then
-              gate="❌ Failed (${high} High)"
-              gate_failed=1
-            else
-              gate="✅ Passed"
-            fi
+          marker = "<!-- dast-pr-waf-comment -->"
+          report_path = Path("dast/reports/waf/zap-waf-report.json")
+          audit_path = Path("dast/reports/waf/modsec-audit.log")
+          summary_path = Path(os.environ["RUNNER_TEMP"]) / "dast-waf-summary.md"
+          lines = [
+              marker,
+              "## DAST WAF Scan Report",
+              "",
+              f"**Branch:** `{os.environ['TARGET_REF']}` - [View run]({os.environ['ACTIONS_RUN_URL']})",
+              "",
+          ]
 
-            echo "| ${label} | ${high} | ${med} | ${low} | ${gate} |" >> "$summary_file"
-          fi
+          if not report_path.exists():
+              lines.extend([
+                  "| High | Medium | Low | Informational | Gate |",
+                  "|-----:|-------:|----:|--------------:|------|",
+                  "| n/a | n/a | n/a | n/a | FAILED - report missing |",
+              ])
+          else:
+              data = json.loads(report_path.read_text())
+              counts = {"High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+              alert_types = {}
+              for site in data.get("site", []):
+                  for alert in site.get("alerts", []):
+                      risk = alert.get("riskdesc") or alert.get("risk") or "Informational"
+                      severity = risk.split(" ", 1)[0]
+                      if severity == "Info":
+                          severity = "Informational"
+                      if severity not in counts:
+                          severity = "Informational"
 
-          {
-            echo ""
-            echo "**Branch:** \`${TARGET_REF}\` — [View run](${ACTIONS_RUN_URL})"
-          } >> "$summary_file"
+                      key = (alert.get("pluginid"), alert.get("name"), severity)
+                      if key not in alert_types:
+                          counts[severity] += 1
+                          alert_types[key] = {
+                              "name": alert.get("name", "Unknown alert"),
+                              "severity": severity,
+                              "instances": 0,
+                          }
+                      alert_types[key]["instances"] += len(alert.get("instances", []))
 
-          cat "$summary_file" >> "$GITHUB_STEP_SUMMARY"
+              gate = f"FAILED ({counts['High']} High)" if counts["High"] else "PASSED"
+              lines.extend([
+                  "| High | Medium | Low | Informational | Gate |",
+                  "|-----:|-------:|----:|--------------:|------|",
+                  f"| {counts['High']} | {counts['Medium']} | {counts['Low']} | {counts['Informational']} | {gate} |",
+              ])
 
-          if [ "$gate_failed" -gt 0 ]; then
-            echo "Gate failed: High severity findings detected or report missing." >&2
-            exit 1
-          fi
+              alerts = sorted(
+                  alert_types.values(),
+                  key=lambda item: (
+                      {"High": 3, "Medium": 2, "Low": 1, "Informational": 0}[item["severity"]] * -1,
+                      item["name"],
+                  ),
+              )
+              if alerts:
+                  lines.extend(["", "### Alert Types", "", "| Alert | Severity | Instances |", "| --- | --- | ---: |"])
+                  for alert in alerts[:25]:
+                      lines.append(f"| {alert['name']} | {alert['severity']} | {alert['instances']} |")
+                  if len(alerts) > 25:
+                      lines.append(f"| ... {len(alerts) - 25} more alert type(s) omitted | | |")
 
-      - name: Comment DAST report on PR
+          if audit_path.exists():
+              interrupted = audit_path.read_text(errors="ignore").count('"is_interrupted":true')
+              lines.extend(["", f"**ModSecurity blocks:** {interrupted}"])
+
+          summary_path.write_text("\n".join(lines) + "\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as step_summary:
+              step_summary.write("\n".join(lines[1:]) + "\n")
+          PY
+
+      - name: Comment WAF DAST report on PR
         if: github.event_name == 'pull_request' && always()
         continue-on-error: true
         uses: actions/github-script@v7
         with:
           script: |
-            const fs = require('fs');
-            const marker = '<!-- dast-pr-comment -->';
-            const bodyPath = `${process.env.RUNNER_TEMP}/dast-summary.md`;
-            const body = fs.readFileSync(bodyPath, 'utf8');
-            const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number,
-              per_page: 100,
+            const upsertPrComment = require('./.github/scripts/upsert_pr_comment.js');
+            await upsertPrComment({
+              github,
+              context,
+              bodyPath: `${process.env.RUNNER_TEMP}/dast-waf-summary.md`,
+              marker: '<!-- dast-pr-waf-comment -->',
             });
 
-            const existing = comments.find(
-              (comment) => comment.user?.type === 'Bot' && comment.body?.includes(marker),
-            );
+      - name: Enforce DAST gate (WAF)
+        run: |
+          high=$(python3 -c "
+          import json
+          with open('dast/reports/waf/zap-waf-report.json') as f:
+              d = json.load(f)
+          print(sum(1 for s in d.get('site',[]) for a in s.get('alerts',[]) if a.get('riskdesc','').startswith('High')))
+          ")
+          echo "High findings: ${high}"
+          if [ "${high}" -gt 0 ]; then
+            echo "Gate failed: ${high} High severity finding(s) detected." >&2; exit 1
+          fi
 
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: existing.id,
-                body,
-              });
-              return;
-            }
-
-            await github.rest.issues.createComment({
-              owner,
-              repo,
-              issue_number,
-              body,
-            });
+      - name: Clean up
+        if: always()
+        run: |
+          docker stop waf-pr backend-waf postgres-waf || true
+          docker rm  waf-pr backend-waf postgres-waf || true
+          docker network rm dast-waf-network || true
